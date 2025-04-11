@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useMap } from '@/contexts/MapContext';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { X, MapPin, PlusCircle } from 'lucide-react';
+import { X, MapPin, PlusCircle, Cat, Dog, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AddAnimalFormProps {
@@ -38,7 +37,6 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({
   const [reportedBy, setReportedBy] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get current location
   const getCurrentLocation = () => {
     setIsSubmitting(true);
     if (navigator.geolocation) {
@@ -70,7 +68,6 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({
     }
   };
 
-  // Get location on mount if using current location
   useEffect(() => {
     if (useCurrentLocation && !latitude && !longitude) {
       getCurrentLocation();
@@ -144,6 +141,17 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({
     }
   };
 
+  const getAnimalIcon = () => {
+    switch (type) {
+      case 'cat':
+        return <Cat className="h-6 w-6" />;
+      case 'dog':
+        return <Dog className="h-6 w-6" />;
+      default:
+        return <HelpCircle className="h-6 w-6" />;
+    }
+  };
+
   return (
     <div className="relative animate-fade-in">
       <Button 
@@ -155,7 +163,15 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({
         <X className="h-4 w-4" />
       </Button>
       
-      <h2 className="text-xl font-bold mb-6 pr-8">Add Animal Sighting</h2>
+      <div className="flex items-center gap-2 mb-6">
+        <div className={`p-2 rounded-full ${
+          type === 'cat' ? 'bg-pink-100' : 
+          type === 'dog' ? 'bg-blue-100' : 'bg-gray-100'
+        }`}>
+          {getAnimalIcon()}
+        </div>
+        <h2 className="text-xl font-bold pr-8">Add Animal Sighting</h2>
+      </div>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
@@ -172,13 +188,28 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({
         <div className="space-y-2">
           <Label htmlFor="type">Animal Type</Label>
           <Select value={type} onValueChange={(value: 'cat' | 'dog' | 'other') => setType(value)}>
-            <SelectTrigger id="type">
-              <SelectValue placeholder="Select animal type" />
+            <SelectTrigger id="type" className="flex items-center gap-2">
+              <span className="flex items-center gap-2">
+                {getAnimalIcon()}
+                <SelectValue placeholder="Select animal type" />
+              </span>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="cat">Cat</SelectItem>
-              <SelectItem value="dog">Dog</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="cat" className="flex items-center gap-2">
+                <span className="flex items-center gap-2">
+                  <Cat className="h-4 w-4" /> Cat
+                </span>
+              </SelectItem>
+              <SelectItem value="dog" className="flex items-center gap-2">
+                <span className="flex items-center gap-2">
+                  <Dog className="h-4 w-4" /> Dog
+                </span>
+              </SelectItem>
+              <SelectItem value="other" className="flex items-center gap-2">
+                <span className="flex items-center gap-2">
+                  <HelpCircle className="h-4 w-4" /> Other
+                </span>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>

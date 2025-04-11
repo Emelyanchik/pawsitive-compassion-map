@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMap } from '../contexts/MapContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { Compass, MapPin, Plus, Minus } from 'lucide-react';
+import { Compass, MapPin, Plus, Minus, Dog, Cat } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { AddAnimalForm } from './AddAnimalForm';
 
@@ -113,7 +113,22 @@ const MapComponent: React.FC = () => {
         reported: '#9B30FF'
       };
       
-      el.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${statusColors[animal.status]}' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'%3E%3C/path%3E%3Ccircle cx='12' cy='10' r='3'%3E%3C/circle%3E%3C/svg%3E")`;
+      let iconSvg;
+      if (animal.type === 'cat') {
+        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="${statusColors[animal.status]}" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M18 13h-.82a8 8 0 0 0-11.94-8.67A2 2 0 0 0 4 6.5a8 8 0 0 0 0 15c0 1.1.9 2 2 2a8 8 0 0 0 13.82-4H18a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V9l2.12-2.12"></path><path d="M10.4 11.6a2 2 0 0 0 3.2 0"/></svg>`;
+      } else if (animal.type === 'dog') {
+        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="${statusColors[animal.status]}" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.305 2.344-2.628M14.5 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.398-2.344-2.628"/><path d="M8 14v.5M16 14v.5"/><path d="M11.25 16.25h1.5L12 17l-.75-.75Z"/><path d="M4.42 11.247A13.152 13.152 0 0 0 4 14.556C4 18.728 7.582 21 12 21s8-2.272 8-6.444c0-1.061-.162-2.2-.493-3.309m-9.243-6.082A8.801 8.801 0 0 1 12 5c.78 0 1.5.108 2.161.306"></path></svg>`;
+      } else {
+        iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${statusColors[animal.status]}" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+      }
+      
+      el.style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(iconSvg)}")`;
+      el.style.width = '35px';
+      el.style.height = '35px';
+      el.style.backgroundSize = 'contain';
+      el.style.backgroundRepeat = 'no-repeat';
+      el.style.backgroundPosition = 'center';
+      el.style.cursor = 'pointer';
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([animal.longitude, animal.latitude])
