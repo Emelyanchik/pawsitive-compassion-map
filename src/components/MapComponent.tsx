@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -6,6 +5,8 @@ import { useMap } from '../contexts/MapContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
 import { Compass, MapPin, Plus, Minus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { AddAnimalForm } from './AddAnimalForm';
 
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -23,6 +24,8 @@ const MapComponent: React.FC = () => {
   const [mapTokenInput, setMapTokenInput] = useState('');
   const [isMapReady, setIsMapReady] = useState(false);
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
+  const [clickedLocation, setClickedLocation] = useState<[number, number] | null>(null);
+  const [isAddAnimalDialogOpen, setIsAddAnimalDialogOpen] = useState(false);
 
   const setupMap = () => {
     if (!mapContainer.current || !mapboxToken) return;
@@ -42,6 +45,12 @@ const MapComponent: React.FC = () => {
         'top-right'
       );
 
+      map.current.on('click', (e) => {
+        const { lng, lat } = e.lngLat;
+        setClickedLocation([lng, lat]);
+        setIsAddAnimalDialogOpen(true);
+      });
+
       map.current.on('load', () => {
         setIsMapReady(true);
       });
@@ -60,7 +69,6 @@ const MapComponent: React.FC = () => {
   };
 
   useEffect(() => {
-    // Get user's location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -69,7 +77,6 @@ const MapComponent: React.FC = () => {
         },
         (error) => {
           console.error('Error getting user location:', error);
-          // Default to London if user location not available
           setUserLocation([-0.127, 51.507]);
         }
       );
@@ -85,11 +92,9 @@ const MapComponent: React.FC = () => {
   useEffect(() => {
     if (!isMapReady || !map.current) return;
 
-    // Clear existing markers
     Object.values(markersRef.current).forEach(marker => marker.remove());
     markersRef.current = {};
 
-    // Add filtered markers to map
     const filteredAnimals = animals.filter(animal => {
       if (filter === 'all') return true;
       if (filter === 'cats') return animal.type === 'cat';
@@ -101,7 +106,6 @@ const MapComponent: React.FC = () => {
       const el = document.createElement('div');
       el.className = 'animal-marker';
       
-      // Set background based on animal type and status
       const statusColors = {
         needs_help: '#FF4500',
         being_helped: '#FFA500',
@@ -111,12 +115,10 @@ const MapComponent: React.FC = () => {
       
       el.style.backgroundImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='${statusColors[animal.status]}' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'%3E%3C/path%3E%3Ccircle cx='12' cy='10' r='3'%3E%3C/circle%3E%3C/svg%3E")`;
 
-      // Create and add the marker to the map
       const marker = new mapboxgl.Marker(el)
         .setLngLat([animal.longitude, animal.latitude])
         .addTo(map.current!);
 
-      // Add click event to show animal details
       marker.getElement().addEventListener('click', () => {
         setSelectedAnimal(animal);
         map.current?.flyTo({
@@ -130,7 +132,6 @@ const MapComponent: React.FC = () => {
     });
   }, [animals, filter, isMapReady]);
 
-  // Zoom to selected animal
   useEffect(() => {
     if (selectedAnimal && map.current) {
       map.current.flyTo({
@@ -167,13 +168,17 @@ const MapComponent: React.FC = () => {
     map.current?.zoomOut();
   };
 
-  // Check for token in localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem('mapbox_token');
     if (storedToken) {
       setMapboxToken(storedToken);
     }
   }, []);
+
+  const closeAddAnimalDialog = () => {
+    setIsAddAnimalDialogOpen(false);
+    setClickedLocation(null);
+  };
 
   if (!mapboxToken) {
     return (
@@ -238,6 +243,28 @@ const MapComponent: React.FC = () => {
           <Compass className="w-5 h-5 text-gray-700" />
         </Button>
       </div>
+
+      <Dialog open={isAddAnimalDialogOpen} onOpenChange={setIsAddAnimalDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Animal at Selected Location</DialogTitle>
+            <DialogDescription>
+              Report an animal at coordinates: {clickedLocation ? `${clickedLocation[1].toFixed(4)}, ${clickedLocation[0].toFixed(4)}` : ''}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {clickedLocation && (
+            <AddAnimalForm 
+              initialValues={{
+                latitude: clickedLocation[1],
+                longitude: clickedLocation[0]
+              }} 
+              onSuccess={closeAddAnimalDialog}
+              onCancel={closeAddAnimalDialog}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
