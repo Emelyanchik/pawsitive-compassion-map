@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMap } from '@/contexts/MapContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,19 +11,30 @@ import { X, MapPin, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AddAnimalFormProps {
-  onClose: () => void;
+  onClose?: () => void;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  initialValues?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
-export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({ onClose }) => {
+export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({ 
+  onClose, 
+  onSuccess, 
+  onCancel, 
+  initialValues 
+}) => {
   const { addAnimal } = useMap();
   const { toast } = useToast();
   const [name, setName] = useState('');
   const [type, setType] = useState<'cat' | 'dog' | 'other'>('cat');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<'needs_help' | 'being_helped' | 'reported'>('needs_help');
-  const [useCurrentLocation, setUseCurrentLocation] = useState(true);
-  const [latitude, setLatitude] = useState<number | ''>('');
-  const [longitude, setLongitude] = useState<number | ''>('');
+  const [useCurrentLocation, setUseCurrentLocation] = useState(!initialValues);
+  const [latitude, setLatitude] = useState<number | ''>(initialValues?.latitude || '');
+  const [longitude, setLongitude] = useState<number | ''>(initialValues?.longitude || '');
   const [reportedBy, setReportedBy] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -60,8 +71,8 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({ onClose }) => {
   };
 
   // Get location on mount if using current location
-  React.useEffect(() => {
-    if (useCurrentLocation) {
+  useEffect(() => {
+    if (useCurrentLocation && !latitude && !longitude) {
       getCurrentLocation();
     }
   }, [useCurrentLocation]);
@@ -78,8 +89,8 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({ onClose }) => {
       return;
     }
 
-    const numLatitude = typeof latitude === 'number' ? latitude : parseFloat(latitude);
-    const numLongitude = typeof longitude === 'number' ? longitude : parseFloat(longitude);
+    const numLatitude = typeof latitude === 'number' ? latitude : parseFloat(latitude as string);
+    const numLongitude = typeof longitude === 'number' ? longitude : parseFloat(longitude as string);
 
     if (isNaN(numLatitude) || isNaN(numLongitude)) {
       toast({
@@ -108,7 +119,11 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({ onClose }) => {
         description: `${name} has been added to the map.`,
       });
 
-      onClose();
+      if (onSuccess) {
+        onSuccess();
+      } else if (onClose) {
+        onClose();
+      }
     } catch (error) {
       console.error("Error adding animal:", error);
       toast({
@@ -121,13 +136,21 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({ onClose }) => {
     }
   };
 
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else if (onClose) {
+      onClose();
+    }
+  };
+
   return (
     <div className="relative animate-fade-in">
       <Button 
         variant="ghost" 
         size="icon" 
         className="absolute right-0 top-0" 
-        onClick={onClose}
+        onClick={handleCancel}
       >
         <X className="h-4 w-4" />
       </Button>
@@ -192,25 +215,27 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({ onClose }) => {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Location</Label>
-            <div className="flex items-center space-x-2">
-              <input 
-                type="checkbox" 
-                id="useCurrentLocation" 
-                checked={useCurrentLocation}
-                onChange={(e) => setUseCurrentLocation(e.target.checked)}
-                className="rounded border-gray-300"
-              />
-              <Label htmlFor="useCurrentLocation" className="text-sm cursor-pointer">
-                Use current location
-              </Label>
-            </div>
+            {!initialValues && (
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="useCurrentLocation" 
+                  checked={useCurrentLocation}
+                  onChange={(e) => setUseCurrentLocation(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="useCurrentLocation" className="text-sm cursor-pointer">
+                  Use current location
+                </Label>
+              </div>
+            )}
           </div>
           
-          {useCurrentLocation ? (
+          {useCurrentLocation && !initialValues ? (
             <div className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
               <MapPin className="h-4 w-4 text-gray-400" />
               {latitude && longitude ? (
-                <span>{latitude.toFixed(6)}, {longitude.toFixed(6)}</span>
+                <span>{Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}</span>
               ) : (
                 <span>Getting your location...</span>
               )}
@@ -235,6 +260,8 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({ onClose }) => {
                   onChange={(e) => setLatitude(parseFloat(e.target.value) || '')} 
                   placeholder="e.g., 51.507" 
                   required={!useCurrentLocation}
+                  readOnly={!!initialValues}
+                  className={initialValues ? "bg-gray-100" : ""}
                 />
               </div>
               <div>
@@ -245,6 +272,8 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({ onClose }) => {
                   onChange={(e) => setLongitude(parseFloat(e.target.value) || '')}
                   placeholder="e.g., -0.127" 
                   required={!useCurrentLocation}
+                  readOnly={!!initialValues}
+                  className={initialValues ? "bg-gray-100" : ""}
                 />
               </div>
             </div>
@@ -262,7 +291,7 @@ export const AddAnimalForm: React.FC<AddAnimalFormProps> = ({ onClose }) => {
         </div>
         
         <div className="flex gap-2 pt-2">
-          <Button variant="outline" type="button" onClick={onClose} className="flex-1">
+          <Button variant="outline" type="button" onClick={handleCancel} className="flex-1">
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting} className="flex-1 gap-1">
