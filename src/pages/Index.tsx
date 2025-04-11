@@ -1,13 +1,21 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from 'react';
+import { MapProvider } from '@/contexts/MapContext';
+import MapComponent from '@/components/MapComponent';
+import Header from '@/components/Header';
+import ActionSidebar from '@/components/ActionSidebar';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <MapProvider>
+      <div className="h-screen w-full overflow-hidden">
+        <Header />
+        <div className="pt-14 h-full">
+          <MapComponent />
+        </div>
+        <ActionSidebar />
       </div>
-    </div>
+    </MapProvider>
   );
 };
 
