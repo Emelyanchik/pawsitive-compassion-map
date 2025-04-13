@@ -19,7 +19,15 @@ import {
   X,
   Plus,
   Cat,
-  Dog
+  Dog,
+  Settings,
+  HelpCircle,
+  Share2,
+  Info,
+  Map,
+  CalendarDays,
+  Bookmark,
+  Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AddAnimalForm } from './AddAnimalForm';
@@ -30,19 +38,28 @@ import { SearchPanel } from './SearchPanel';
 import { ReportPanel } from './ReportPanel';
 import { StatsPanel } from './StatsPanel';
 import { ProfilePanel } from './ProfilePanel';
+import { useToast } from '@/hooks/use-toast';
 
-type ActivePanel = 'none' | 'add' | 'search' | 'filter' | 'donate' | 'report' | 'stats' | 'profile';
+type ActivePanel = 'none' | 'add' | 'search' | 'filter' | 'donate' | 'report' | 'stats' | 'profile' | 'help' | 'share' | 'settings' | 'events' | 'saved' | 'notifications';
 
 const ActionSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePanel, setActivePanel] = useState<ActivePanel>('none');
   const { filter, setFilter, selectedAnimal } = useMap();
+  const { toast } = useToast();
   
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   
   const openPanel = (panel: ActivePanel) => {
     setActivePanel(prev => prev === panel ? 'none' : panel);
     if (isCollapsed) setIsCollapsed(false);
+  };
+
+  const showComingSoonToast = (feature: string) => {
+    toast({
+      title: "Coming Soon",
+      description: `The ${feature} feature will be available in a future update.`,
+    });
   };
 
   const renderActivePanel = () => {
@@ -61,6 +78,25 @@ const ActionSidebar = () => {
         return <StatsPanel onClose={() => setActivePanel('none')} />;
       case 'profile':
         return <ProfilePanel onClose={() => setActivePanel('none')} />;
+      // New panels will be implemented in future updates
+      case 'help':
+      case 'share':
+      case 'settings':
+      case 'events':
+      case 'saved':
+      case 'notifications':
+        return (
+          <div className="p-4">
+            <h2 className="text-xl font-bold mb-4">Coming Soon</h2>
+            <p>This feature is under development and will be available in a future update.</p>
+            <Button 
+              className="mt-4" 
+              onClick={() => setActivePanel('none')}
+            >
+              Close
+            </Button>
+          </div>
+        );
       default:
         return selectedAnimal ? <AnimalDetails /> : null;
     }
@@ -83,7 +119,8 @@ const ActionSidebar = () => {
         </Button>
 
         <ScrollArea className="flex-1 py-4">
-          <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-3">
+            {/* Primary Actions */}
             <Button
               variant={activePanel === 'add' ? "default" : "ghost"}
               size="icon"
@@ -164,6 +201,7 @@ const ActionSidebar = () => {
             
             <Separator className="w-8 bg-gray-200" />
 
+            {/* Financial & Reporting */}
             <Button
               variant={activePanel === 'donate' ? "default" : "ghost"}
               size="icon"
@@ -194,6 +232,72 @@ const ActionSidebar = () => {
               <BarChart4 className="h-6 w-6" />
             </Button>
             
+            <Separator className="w-8 bg-gray-200" />
+
+            {/* New Additional Buttons */}
+            <Button
+              variant={activePanel === 'help' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              onClick={() => openPanel('help')}
+              title="Help & Resources"
+            >
+              <HelpCircle className="h-6 w-6" />
+            </Button>
+            
+            <Button
+              variant={activePanel === 'share' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              onClick={() => openPanel('share')}
+              title="Share Map"
+            >
+              <Share2 className="h-6 w-6" />
+            </Button>
+            
+            <Button
+              variant={activePanel === 'settings' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              onClick={() => openPanel('settings')}
+              title="Map Settings"
+            >
+              <Settings className="h-6 w-6" />
+            </Button>
+            
+            <Button
+              variant={activePanel === 'events' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              onClick={() => openPanel('events')}
+              title="Pet Events"
+            >
+              <CalendarDays className="h-6 w-6" />
+            </Button>
+            
+            <Button
+              variant={activePanel === 'saved' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              onClick={() => openPanel('saved')}
+              title="Saved Animals"
+            >
+              <Bookmark className="h-6 w-6" />
+            </Button>
+            
+            <Button
+              variant={activePanel === 'notifications' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              onClick={() => openPanel('notifications')}
+              title="Notifications"
+            >
+              <Bell className="h-6 w-6" />
+            </Button>
+            
+            <Separator className="w-8 bg-gray-200" />
+            
+            {/* User Settings */}
             <Button
               variant={activePanel === 'profile' ? "default" : "ghost"}
               size="icon"

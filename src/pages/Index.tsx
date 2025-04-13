@@ -8,7 +8,13 @@ import ActionSidebar from '@/components/ActionSidebar';
 const Index = () => {
   return (
     <MapProvider>
-      <div className="h-screen w-full overflow-hidden">
+      <div className="h-screen w-full overflow-hidden" style={{
+        // Added CSS variables for pet map colors
+        '--petmap-orange': '#FFA500',
+        '--petmap-green': '#32CD32',
+        '--petmap-purple': '#9B30FF',
+        '--petmap-blue': '#0EA5E9'
+      }}>
         <Header />
         <div className="pt-14 h-full">
           <MapComponent />
