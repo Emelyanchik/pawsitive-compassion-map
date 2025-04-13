@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useMap } from '@/contexts/MapContext';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,11 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-export const AnimalDetails = () => {
+interface AnimalDetailsProps {
+  isInDialog?: boolean;
+}
+
+export const AnimalDetails: React.FC<AnimalDetailsProps> = ({ isInDialog = false }) => {
   const { selectedAnimal, setSelectedAnimal, updateAnimalStatus } = useMap();
   const { toast } = useToast();
   const [isSaved, setIsSaved] = useState(false);
@@ -91,7 +94,6 @@ export const AnimalDetails = () => {
     });
   };
 
-  // Get status badge color
   const getStatusBadge = () => {
     switch (selectedAnimal.status) {
       case 'needs_help':
@@ -107,8 +109,20 @@ export const AnimalDetails = () => {
     }
   };
 
+  const closeButton = !isInDialog ? (
+    <Button 
+      variant="ghost" 
+      size="icon" 
+      className="h-8 w-8" 
+      onClick={() => setSelectedAnimal(null)}
+      title="Close"
+    >
+      <X className="h-4 w-4" />
+    </Button>
+  ) : null;
+
   return (
-    <div className="relative animate-fade-in">
+    <div className={`relative ${isInDialog ? 'p-1' : 'animate-fade-in'}`}>
       <div className="flex justify-between items-start mb-2">
         <h2 className="text-xl font-bold">{selectedAnimal.name}</h2>
         <div className="flex gap-1">
@@ -121,15 +135,7 @@ export const AnimalDetails = () => {
           >
             <Bookmark className="h-4 w-4" fill={isSaved ? "currentColor" : "none"} />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8" 
-            onClick={() => setSelectedAnimal(null)}
-            title="Close"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {closeButton}
         </div>
       </div>
       
@@ -143,7 +149,6 @@ export const AnimalDetails = () => {
         </Badge>
       </div>
       
-      {/* Action buttons row */}
       <div className="flex flex-wrap gap-2 mb-4">
         <Button 
           variant="outline" 
@@ -209,7 +214,6 @@ export const AnimalDetails = () => {
         </Popover>
       </div>
       
-      {/* Placeholder image */}
       <div className="bg-gray-100 w-full h-48 mb-4 rounded-md flex items-center justify-center text-gray-400 relative group">
         {selectedAnimal.type === 'cat' ? (
           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

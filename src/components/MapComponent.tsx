@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 import { Compass, MapPin, Plus, Minus, Dog, Cat } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { AddAnimalForm } from './AddAnimalForm';
+import AnimalDetailsDialog from './AnimalDetailsDialog';
 
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -26,6 +27,7 @@ const MapComponent: React.FC = () => {
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const [clickedLocation, setClickedLocation] = useState<[number, number] | null>(null);
   const [isAddAnimalDialogOpen, setIsAddAnimalDialogOpen] = useState(false);
+  const [isAnimalDetailsOpen, setIsAnimalDetailsOpen] = useState(false);
 
   const setupMap = () => {
     if (!mapContainer.current || !mapboxToken) return;
@@ -136,6 +138,7 @@ const MapComponent: React.FC = () => {
 
       marker.getElement().addEventListener('click', () => {
         setSelectedAnimal(animal);
+        setIsAnimalDetailsOpen(true);
         map.current?.flyTo({
           center: [animal.longitude, animal.latitude],
           zoom: 15,
@@ -280,6 +283,11 @@ const MapComponent: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
+      
+      <AnimalDetailsDialog 
+        open={isAnimalDetailsOpen} 
+        onOpenChange={setIsAnimalDetailsOpen} 
+      />
     </div>
   );
 };
