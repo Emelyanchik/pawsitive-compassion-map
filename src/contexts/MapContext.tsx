@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export type AnimalType = 'cat' | 'dog' | 'other';
 
@@ -27,15 +28,21 @@ interface MapContextType {
   filter: 'all' | 'cats' | 'dogs';
   selectedAnimal: Animal | null;
   mapboxToken: string | null;
+  userLocation: [number, number] | null;
+  distanceFilter: number;
   setMapboxToken: (token: string) => void;
   setAnimals: React.Dispatch<React.SetStateAction<Animal[]>>;
   setFilter: React.Dispatch<React.SetStateAction<'all' | 'cats' | 'dogs'>>;
   setSelectedAnimal: React.Dispatch<React.SetStateAction<Animal | null>>;
+  setDistanceFilter: React.Dispatch<React.SetStateAction<number>>;
   addAnimal: (animal: Omit<Animal, 'id' | 'reportedAt'>) => void;
   updateAnimalStatus: (id: string, status: Animal['status']) => void;
   assignGuardian: (animalId: string, guardianName: string, telegramUsername?: string) => boolean;
   removeGuardian: (animalId: string) => void;
   guardians: Record<string, Guardian>;
+  filteredAnimals: Animal[];
+  statusFilter: string | null;
+  setStatusFilter: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
@@ -90,12 +97,71 @@ const initialAnimals: Animal[] = [
   }
 ];
 
+// Helper function to calculate distance between two points in km
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+};
+
+const deg2rad = (deg: number): number => {
+  return deg * (Math.PI / 180);
+};
+
 export const MapProvider = ({ children }: MapProviderProps) => {
   const [animals, setAnimals] = useState<Animal[]>(initialAnimals);
   const [filter, setFilter] = useState<'all' | 'cats' | 'dogs'>('all');
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [guardians, setGuardians] = useState<Record<string, Guardian>>({});
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [distanceFilter, setDistanceFilter] = useState<number>(10);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
+  // Detect user location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.longitude, position.coords.latitude]);
+        },
+        (error) => {
+          console.error('Error getting user location:', error);
+        }
+      );
+    }
+  }, []);
+
+  // Filter animals based on type, distance, and status
+  const filteredAnimals = animals.filter(animal => {
+    // Filter by animal type
+    if (filter !== 'all' && 
+        ((filter === 'cats' && animal.type !== 'cat') || 
+         (filter === 'dogs' && animal.type !== 'dog'))) {
+      return false;
+    }
+
+    // Filter by status if statusFilter is set
+    if (statusFilter && animal.status !== statusFilter) {
+      return false;
+    }
+
+    // Filter by distance if userLocation is available
+    if (userLocation && distanceFilter > 0) {
+      const distance = calculateDistance(
+        userLocation[1], userLocation[0], 
+        animal.latitude, animal.longitude
+      );
+      return distance <= distanceFilter;
+    }
+
+    return true;
+  });
 
   const addAnimal = (animal: Omit<Animal, 'id' | 'reportedAt'>) => {
     const newAnimal: Animal = {
@@ -187,15 +253,21 @@ export const MapProvider = ({ children }: MapProviderProps) => {
         filter,
         selectedAnimal,
         mapboxToken,
+        userLocation,
+        distanceFilter,
         setMapboxToken,
         setAnimals,
         setFilter,
         setSelectedAnimal,
+        setDistanceFilter,
         addAnimal,
         updateAnimalStatus,
         assignGuardian,
         removeGuardian,
-        guardians
+        guardians,
+        filteredAnimals,
+        statusFilter,
+        setStatusFilter
       }}
     >
       {children}

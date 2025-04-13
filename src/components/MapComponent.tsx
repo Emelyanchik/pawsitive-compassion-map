@@ -1,11 +1,10 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMap } from '../contexts/MapContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { Compass, MapPin, Plus, Minus, Dog, Cat } from 'lucide-react';
+import { Compass, MapPin, Plus, Minus, Dog, Cat, Circle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { AddAnimalForm } from './AddAnimalForm';
 import AnimalDetailsDialog from './AnimalDetailsDialog';
@@ -15,20 +14,21 @@ const MapComponent: React.FC = () => {
   const map = useRef<mapboxgl.Map | null>(null);
   const { toast } = useToast();
   const { 
-    animals, 
-    filter, 
+    filteredAnimals,
     selectedAnimal, 
     setSelectedAnimal, 
     mapboxToken,
-    setMapboxToken
+    setMapboxToken,
+    userLocation,
+    distanceFilter
   } = useMap();
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [mapTokenInput, setMapTokenInput] = useState('');
   const [isMapReady, setIsMapReady] = useState(false);
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const [clickedLocation, setClickedLocation] = useState<[number, number] | null>(null);
   const [isAddAnimalDialogOpen, setIsAddAnimalDialogOpen] = useState(false);
   const [isAnimalDetailsOpen, setIsAnimalDetailsOpen] = useState(false);
+  const radiusCircleRef = useRef<mapboxgl.Circle | null>(null);
 
   const setupMap = () => {
     if (!mapContainer.current || !mapboxToken) return;
@@ -82,40 +82,22 @@ const MapComponent: React.FC = () => {
     }
   };
 
+  // Initialize map when mapbox token and user location are available
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { longitude, latitude } = position.coords;
-          setUserLocation([longitude, latitude]);
-        },
-        (error) => {
-          console.error('Error getting user location:', error);
-          setUserLocation([-0.127, 51.507]);
-        }
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    if (mapboxToken && userLocation && !map.current) {
+    if (mapboxToken && !map.current) {
       setupMap();
     }
-  }, [mapboxToken, userLocation]);
+  }, [mapboxToken]);
 
+  // Update map markers when filtered animals change
   useEffect(() => {
     if (!isMapReady || !map.current) return;
 
+    // Remove all existing markers
     Object.values(markersRef.current).forEach(marker => marker.remove());
     markersRef.current = {};
 
-    const filteredAnimals = animals.filter(animal => {
-      if (filter === 'all') return true;
-      if (filter === 'cats') return animal.type === 'cat';
-      if (filter === 'dogs') return animal.type === 'dog';
-      return false;
-    });
-
+    // Add markers for filtered animals
     filteredAnimals.forEach(animal => {
       const el = document.createElement('div');
       el.className = 'animal-marker';
@@ -163,7 +145,74 @@ const MapComponent: React.FC = () => {
 
       markersRef.current[animal.id] = marker;
     });
-  }, [animals, filter, isMapReady]);
+  }, [filteredAnimals, isMapReady]);
+
+  // Add distance circle when user location and distance filter change
+  useEffect(() => {
+    if (!isMapReady || !map.current || !userLocation) return;
+
+    // Remove existing circle if it exists
+    if (map.current.getLayer('distance-circle')) {
+      map.current.removeLayer('distance-circle');
+    }
+    if (map.current.getSource('distance-circle')) {
+      map.current.removeSource('distance-circle');
+    }
+
+    // Add distance circle if user location is available
+    if (userLocation && distanceFilter > 0) {
+      // Check if the map style is loaded
+      if (!map.current.isStyleLoaded()) {
+        map.current.once('style.load', () => {
+          addDistanceCircle();
+        });
+      } else {
+        addDistanceCircle();
+      }
+    }
+  }, [userLocation, distanceFilter, isMapReady]);
+
+  const addDistanceCircle = () => {
+    if (!map.current || !userLocation) return;
+
+    // Create a GeoJSON source for the circle
+    const point = {
+      type: 'Point' as const,
+      coordinates: userLocation
+    };
+
+    // Convert km to meters for the buffer
+    const radiusInMeters = distanceFilter * 1000;
+    
+    if (map.current.getSource('distance-circle')) {
+      // Update existing source
+      (map.current.getSource('distance-circle') as mapboxgl.GeoJSONSource).setData(point);
+    } else {
+      // Create new source and layer
+      map.current.addSource('distance-circle', {
+        type: 'geojson',
+        data: point
+      });
+
+      map.current.addLayer({
+        id: 'distance-circle',
+        type: 'circle',
+        source: 'distance-circle',
+        paint: {
+          'circle-radius': {
+            stops: [
+              [0, 0],
+              [20, radiusInMeters / 0.075] // Scale the radius based on zoom level
+            ],
+            base: 2
+          },
+          'circle-color': 'rgba(67, 156, 230, 0.2)',
+          'circle-stroke-width': 2,
+          'circle-stroke-color': 'rgba(67, 156, 230, 0.8)'
+        }
+      });
+    }
+  };
 
   useEffect(() => {
     if (selectedAnimal && map.current) {
