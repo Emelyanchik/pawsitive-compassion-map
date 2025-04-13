@@ -18,19 +18,29 @@ import {
   Bookmark, 
   Edit, 
   ArrowUpRight, 
-  AlertTriangle 
+  AlertTriangle,
+  UserPlus,
+  UserMinus,
+  ExternalLink,
+  Users
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface AnimalDetailsProps {
   isInDialog?: boolean;
 }
 
 export const AnimalDetails: React.FC<AnimalDetailsProps> = ({ isInDialog = false }) => {
-  const { selectedAnimal, setSelectedAnimal, updateAnimalStatus } = useMap();
+  const { selectedAnimal, setSelectedAnimal, updateAnimalStatus, assignGuardian, removeGuardian, guardians } = useMap();
   const { toast } = useToast();
   const [isSaved, setIsSaved] = useState(false);
+  const [isGuardianDialogOpen, setIsGuardianDialogOpen] = useState(false);
+  const [guardianName, setGuardianName] = useState('');
+  const [telegramUsername, setTelegramUsername] = useState('');
 
   if (!selectedAnimal) return null;
 
@@ -109,6 +119,53 @@ export const AnimalDetails: React.FC<AnimalDetailsProps> = ({ isInDialog = false
     }
   };
 
+  const handleAssignGuardian = () => {
+    if (!guardianName.trim()) {
+      toast({
+        title: 'Guardian Name Required',
+        description: 'Please enter a guardian name.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const success = assignGuardian(selectedAnimal.id, guardianName, telegramUsername);
+    
+    if (success) {
+      toast({
+        title: 'Guardian Assigned',
+        description: `${guardianName} is now a guardian for ${selectedAnimal.name}.`,
+      });
+      setIsGuardianDialogOpen(false);
+      setGuardianName('');
+      setTelegramUsername('');
+    } else {
+      toast({
+        title: 'Guardian Limit Reached',
+        description: `${guardianName} is already taking care of 5 animals, which is the maximum allowed.`,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRemoveGuardian = () => {
+    if (selectedAnimal.guardian) {
+      removeGuardian(selectedAnimal.id);
+      toast({
+        title: 'Guardian Removed',
+        description: `${selectedAnimal.guardian} is no longer a guardian for ${selectedAnimal.name}.`,
+      });
+    }
+  };
+
+  const openTelegramMiniApp = () => {
+    window.open('https://t.me/PetCareGameBot', '_blank');
+    toast({
+      title: 'Opening Telegram Mini-App',
+      description: 'The PetCare Game will open in a new tab',
+    });
+  };
+
   const closeButton = !isInDialog ? (
     <Button 
       variant="ghost" 
@@ -147,6 +204,11 @@ export const AnimalDetails: React.FC<AnimalDetailsProps> = ({ isInDialog = false
         <Badge variant="outline" className="bg-gray-100">
           ID: {selectedAnimal.id.substring(0, 8)}
         </Badge>
+        {selectedAnimal.guardian && (
+          <Badge className="bg-petmap-blue text-white">
+            Guardian: {selectedAnimal.guardian}
+          </Badge>
+        )}
       </div>
       
       <div className="flex flex-wrap gap-2 mb-4">
@@ -272,6 +334,52 @@ export const AnimalDetails: React.FC<AnimalDetailsProps> = ({ isInDialog = false
           Contact Reporter
         </Button>
       </div>
+
+      <div className="space-y-3 mb-6">
+        <h3 className="text-sm font-medium">Guardian Information</h3>
+        
+        {selectedAnimal.guardian ? (
+          <div className="bg-blue-50 p-3 rounded-md">
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center">
+                <Users className="h-4 w-4 text-petmap-blue mr-2" />
+                <span className="font-medium">{selectedAnimal.guardian}</span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8"
+                onClick={handleRemoveGuardian}
+              >
+                <UserMinus className="h-3.5 w-3.5 mr-1" />
+                Remove
+              </Button>
+            </div>
+            
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="w-full bg-blue-500 hover:bg-blue-600"
+              onClick={openTelegramMiniApp}
+            >
+              <ExternalLink className="h-4 w-4 mr-1" />
+              Open PetCare Game on Telegram
+            </Button>
+          </div>
+        ) : (
+          <div className="bg-gray-50 p-3 rounded-md flex flex-col items-center">
+            <p className="text-sm text-gray-600 mb-2">No guardian assigned yet</p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setIsGuardianDialogOpen(true)}
+            >
+              <UserPlus className="h-4 w-4 mr-1" />
+              Assign Guardian
+            </Button>
+          </div>
+        )}
+      </div>
       
       <div className="space-y-3 mb-6">
         <h3 className="text-sm font-medium">Medical Information</h3>
@@ -380,6 +488,52 @@ export const AnimalDetails: React.FC<AnimalDetailsProps> = ({ isInDialog = false
           </Button>
         </div>
       </div>
+
+      <Dialog open={isGuardianDialogOpen} onOpenChange={setIsGuardianDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Assign Guardian</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                value={guardianName}
+                onChange={(e) => setGuardianName(e.target.value)}
+                className="col-span-3"
+                placeholder="Guardian's name"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="telegram" className="text-right">
+                Telegram
+              </Label>
+              <Input
+                id="telegram"
+                value={telegramUsername}
+                onChange={(e) => setTelegramUsername(e.target.value)}
+                className="col-span-3"
+                placeholder="@username (optional)"
+              />
+            </div>
+            <div className="col-span-4 text-sm text-gray-500">
+              Guardians can take care of up to 5 animals at a time.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsGuardianDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={handleAssignGuardian}>
+              <UserPlus className="h-4 w-4 mr-1" />
+              Assign
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

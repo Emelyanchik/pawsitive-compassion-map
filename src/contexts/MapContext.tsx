@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type AnimalType = 'cat' | 'dog' | 'other';
@@ -14,6 +13,13 @@ export interface Animal {
   status: 'needs_help' | 'being_helped' | 'adopted' | 'reported';
   reportedAt: string;
   reportedBy?: string;
+  guardian?: string;
+}
+
+interface Guardian {
+  name: string;
+  telegramUsername?: string;
+  animalsCount: number;
 }
 
 interface MapContextType {
@@ -27,6 +33,9 @@ interface MapContextType {
   setSelectedAnimal: React.Dispatch<React.SetStateAction<Animal | null>>;
   addAnimal: (animal: Omit<Animal, 'id' | 'reportedAt'>) => void;
   updateAnimalStatus: (id: string, status: Animal['status']) => void;
+  assignGuardian: (animalId: string, guardianName: string, telegramUsername?: string) => boolean;
+  removeGuardian: (animalId: string) => void;
+  guardians: Record<string, Guardian>;
 }
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
@@ -86,6 +95,7 @@ export const MapProvider = ({ children }: MapProviderProps) => {
   const [filter, setFilter] = useState<'all' | 'cats' | 'dogs'>('all');
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+  const [guardians, setGuardians] = useState<Record<string, Guardian>>({});
 
   const addAnimal = (animal: Omit<Animal, 'id' | 'reportedAt'>) => {
     const newAnimal: Animal = {
@@ -104,9 +114,69 @@ export const MapProvider = ({ children }: MapProviderProps) => {
       )
     );
     
-    // Update selected animal if it's the one being updated
     if (selectedAnimal?.id === id) {
       setSelectedAnimal(prev => prev ? { ...prev, status } : null);
+    }
+  };
+
+  const assignGuardian = (animalId: string, guardianName: string, telegramUsername?: string): boolean => {
+    const guardian = guardians[guardianName] || { name: guardianName, telegramUsername, animalsCount: 0 };
+    
+    if (guardian.animalsCount >= 5) {
+      return false;
+    }
+    
+    const updatedGuardian = {
+      ...guardian,
+      animalsCount: guardian.animalsCount + 1,
+      telegramUsername: telegramUsername || guardian.telegramUsername
+    };
+    
+    setGuardians(prev => ({
+      ...prev,
+      [guardianName]: updatedGuardian
+    }));
+    
+    setAnimals(prev =>
+      prev.map(animal =>
+        animal.id === animalId ? { ...animal, guardian: guardianName } : animal
+      )
+    );
+    
+    if (selectedAnimal?.id === animalId) {
+      setSelectedAnimal(prev => prev ? { ...prev, guardian: guardianName } : null);
+    }
+    
+    return true;
+  };
+
+  const removeGuardian = (animalId: string) => {
+    const animal = animals.find(a => a.id === animalId);
+    if (!animal || !animal.guardian) return;
+    
+    const guardianName = animal.guardian;
+    const guardian = guardians[guardianName];
+    
+    if (guardian) {
+      const updatedGuardian = {
+        ...guardian,
+        animalsCount: Math.max(0, guardian.animalsCount - 1)
+      };
+      
+      setGuardians(prev => ({
+        ...prev,
+        [guardianName]: updatedGuardian
+      }));
+    }
+    
+    setAnimals(prev =>
+      prev.map(animal =>
+        animal.id === animalId ? { ...animal, guardian: undefined } : animal
+      )
+    );
+    
+    if (selectedAnimal?.id === animalId) {
+      setSelectedAnimal(prev => prev ? { ...prev, guardian: undefined } : null);
     }
   };
 
@@ -122,7 +192,10 @@ export const MapProvider = ({ children }: MapProviderProps) => {
         setFilter,
         setSelectedAnimal,
         addAnimal,
-        updateAnimalStatus
+        updateAnimalStatus,
+        assignGuardian,
+        removeGuardian,
+        guardians
       }}
     >
       {children}
