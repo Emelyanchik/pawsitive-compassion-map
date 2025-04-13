@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -47,10 +48,21 @@ const MapComponent: React.FC = () => {
         'top-right'
       );
 
+      // Only add the click event listener for empty map areas
       map.current.on('click', (e) => {
-        const { lng, lat } = e.lngLat;
-        setClickedLocation([lng, lat]);
-        setIsAddAnimalDialogOpen(true);
+        // Check if we clicked on a marker (which will be handled separately)
+        // The map element itself will have a class name that starts with "mapboxgl-"
+        const targetElement = e.originalEvent.target as HTMLElement;
+        const isMapboxElement = 
+          targetElement.className.toString().startsWith('mapboxgl-') || 
+          targetElement.closest('.animal-marker');
+        
+        // Only open the add animal dialog if we clicked directly on the map (not on a marker)
+        if (!targetElement.closest('.animal-marker')) {
+          const { lng, lat } = e.lngLat;
+          setClickedLocation([lng, lat]);
+          setIsAddAnimalDialogOpen(true);
+        }
       });
 
       map.current.on('load', () => {
@@ -136,7 +148,10 @@ const MapComponent: React.FC = () => {
         .setLngLat([animal.longitude, animal.latitude])
         .addTo(map.current!);
 
-      marker.getElement().addEventListener('click', () => {
+      marker.getElement().addEventListener('click', (e) => {
+        // Prevent the map's click event from firing
+        e.stopPropagation();
+        
         setSelectedAnimal(animal);
         setIsAnimalDetailsOpen(true);
         map.current?.flyTo({
