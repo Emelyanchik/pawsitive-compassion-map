@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { HandHelping, MessageCircle, ExternalLink } from 'lucide-react';
+import { HandHelping, MessageCircle, ExternalLink, X } from 'lucide-react';
 import { 
   Card,
   CardContent,
@@ -43,6 +43,14 @@ export const VolunteerPanel = ({ onClose }: VolunteerPanelProps) => {
 
   const openTelegramMiniApp = () => {
     window.open('https://t.me/petcare_game_bot', '_blank');
+  };
+
+  // This function handles the navigation to the token holders panel
+  const handleViewTopVolunteers = () => {
+    toast({
+      title: "Coming Soon",
+      description: "The Top Volunteers feature will be available in a future update.",
+    });
   };
 
   return (
@@ -161,7 +169,7 @@ export const VolunteerPanel = ({ onClose }: VolunteerPanelProps) => {
             </ul>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" className="w-full" onClick={() => openPanel('token-holders')}>
+            <Button variant="outline" className="w-full" onClick={handleViewTopVolunteers}>
               View Top Volunteers
             </Button>
           </CardFooter>
