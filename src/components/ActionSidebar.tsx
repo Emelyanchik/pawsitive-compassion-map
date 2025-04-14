@@ -27,7 +27,10 @@ import {
   Map,
   CalendarDays,
   Bookmark,
-  Bell
+  Bell,
+  HandHelping,
+  BadgePercent,
+  Coins
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AddAnimalForm } from './AddAnimalForm';
@@ -38,9 +41,12 @@ import { SearchPanel } from './SearchPanel';
 import { ReportPanel } from './ReportPanel';
 import { StatsPanel } from './StatsPanel';
 import { ProfilePanel } from './ProfilePanel';
+import { VolunteerPanel } from './VolunteerPanel';
+import { TokenHoldersPanel } from './TokenHoldersPanel';
+import { TokenConversionPanel } from './TokenConversionPanel';
 import { useToast } from '@/hooks/use-toast';
 
-type ActivePanel = 'none' | 'add' | 'search' | 'filter' | 'donate' | 'report' | 'stats' | 'profile' | 'help' | 'share' | 'settings' | 'events' | 'saved' | 'notifications';
+type ActivePanel = 'none' | 'add' | 'search' | 'filter' | 'donate' | 'report' | 'stats' | 'profile' | 'help' | 'share' | 'settings' | 'events' | 'saved' | 'notifications' | 'volunteer' | 'token-holders' | 'token-conversion';
 
 const ActionSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -78,6 +84,12 @@ const ActionSidebar = () => {
         return <StatsPanel onClose={() => setActivePanel('none')} />;
       case 'profile':
         return <ProfilePanel onClose={() => setActivePanel('none')} />;
+      case 'volunteer':
+        return <VolunteerPanel onClose={() => setActivePanel('none')} />;
+      case 'token-holders':
+        return <TokenHoldersPanel onClose={() => setActivePanel('none')} />;
+      case 'token-conversion':
+        return <TokenConversionPanel onClose={() => setActivePanel('none')} />;
       // New panels will be implemented in future updates
       case 'help':
       case 'share':
@@ -199,6 +211,40 @@ const ActionSidebar = () => {
               <Dog className="h-6 w-6" />
             </Button>
             
+            {/* New Volunteer Button */}
+            <Button
+              variant={activePanel === 'volunteer' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-[#9b87f5] text-white hover:bg-[#7E69AB]"
+              onClick={() => openPanel('volunteer')}
+              title="Become a Volunteer"
+            >
+              <HandHelping className="h-6 w-6" />
+            </Button>
+            
+            <Separator className="w-8 bg-gray-200" />
+
+            {/* Token Management */}
+            <Button
+              variant={activePanel === 'token-holders' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              onClick={() => openPanel('token-holders')}
+              title="Token Holders Ranking"
+            >
+              <BadgePercent className="h-6 w-6" />
+            </Button>
+            
+            <Button
+              variant={activePanel === 'token-conversion' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              onClick={() => openPanel('token-conversion')}
+              title="Convert Tokens"
+            >
+              <Coins className="h-6 w-6" />
+            </Button>
+
             <Separator className="w-8 bg-gray-200" />
 
             {/* Financial & Reporting */}
@@ -234,7 +280,7 @@ const ActionSidebar = () => {
             
             <Separator className="w-8 bg-gray-200" />
 
-            {/* New Additional Buttons */}
+            {/* Additional Buttons */}
             <Button
               variant={activePanel === 'help' ? "default" : "ghost"}
               size="icon"

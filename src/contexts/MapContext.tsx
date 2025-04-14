@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export type AnimalType = 'cat' | 'dog' | 'other';
@@ -21,6 +20,15 @@ interface Guardian {
   name: string;
   telegramUsername?: string;
   animalsCount: number;
+  tokens?: number;
+}
+
+interface TokenHolder {
+  id: string;
+  name: string;
+  username: string;
+  tokens: number;
+  tokensHistory: Array<{date: string, amount: number, reason: string}>;
 }
 
 interface MapContextType {
@@ -43,6 +51,10 @@ interface MapContextType {
   filteredAnimals: Animal[];
   statusFilter: string | null;
   setStatusFilter: React.Dispatch<React.SetStateAction<string | null>>;
+  tokenHolders: TokenHolder[];
+  userTokens: number;
+  addTokens: (amount: number, reason: string) => void;
+  convertTokens: (amount: number, rewardType: string) => boolean;
 }
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
@@ -113,6 +125,41 @@ const deg2rad = (deg: number): number => {
   return deg * (Math.PI / 180);
 };
 
+// Sample token holders data
+const initialTokenHolders: TokenHolder[] = [
+  {
+    id: '1',
+    name: 'Alice Chen',
+    username: 'alice_petlover',
+    tokens: 1245,
+    tokensHistory: [
+      {date: '2025-04-10', amount: 50, reason: 'Animal rescue'},
+      {date: '2025-04-05', amount: 30, reason: 'Volunteer work'},
+      {date: '2025-03-28', amount: 100, reason: 'Community event'},
+    ]
+  },
+  {
+    id: '2',
+    name: 'Bob Smith',
+    username: 'bob_rescuer',
+    tokens: 980,
+    tokensHistory: [
+      {date: '2025-04-12', amount: 45, reason: 'Animal transport'},
+      {date: '2025-04-03', amount: 25, reason: 'Volunteer work'},
+    ]
+  },
+  {
+    id: '3',
+    name: 'Current User',
+    username: 'current_user',
+    tokens: 320,
+    tokensHistory: [
+      {date: '2025-04-13', amount: 20, reason: 'Report animal'},
+      {date: '2025-04-01', amount: 50, reason: 'Volunteer work'},
+    ]
+  }
+];
+
 export const MapProvider = ({ children }: MapProviderProps) => {
   const [animals, setAnimals] = useState<Animal[]>(initialAnimals);
   const [filter, setFilter] = useState<'all' | 'cats' | 'dogs'>('all');
@@ -122,6 +169,8 @@ export const MapProvider = ({ children }: MapProviderProps) => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [distanceFilter, setDistanceFilter] = useState<number>(10);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [tokenHolders, setTokenHolders] = useState<TokenHolder[]>(initialTokenHolders);
+  const [userTokens, setUserTokens] = useState<number>(320); // Starting tokens for the user
 
   // Detect user location
   useEffect(() => {
@@ -246,6 +295,60 @@ export const MapProvider = ({ children }: MapProviderProps) => {
     }
   };
 
+  // Add tokens to the user's account
+  const addTokens = (amount: number, reason: string) => {
+    setUserTokens(prev => prev + amount);
+    
+    setTokenHolders(prev => 
+      prev.map(holder => 
+        holder.username === 'current_user' 
+          ? {
+              ...holder,
+              tokens: holder.tokens + amount,
+              tokensHistory: [
+                {
+                  date: new Date().toISOString().split('T')[0],
+                  amount,
+                  reason
+                },
+                ...holder.tokensHistory
+              ]
+            } 
+          : holder
+      )
+    );
+  };
+
+  // Convert tokens to rewards
+  const convertTokens = (amount: number, rewardType: string): boolean => {
+    if (userTokens < amount) {
+      return false;
+    }
+    
+    setUserTokens(prev => prev - amount);
+    
+    setTokenHolders(prev => 
+      prev.map(holder => 
+        holder.username === 'current_user' 
+          ? {
+              ...holder,
+              tokens: holder.tokens - amount,
+              tokensHistory: [
+                {
+                  date: new Date().toISOString().split('T')[0],
+                  amount: -amount,
+                  reason: `Converted to ${rewardType}`
+                },
+                ...holder.tokensHistory
+              ]
+            } 
+          : holder
+      )
+    );
+    
+    return true;
+  };
+
   return (
     <MapContext.Provider
       value={{
@@ -267,7 +370,11 @@ export const MapProvider = ({ children }: MapProviderProps) => {
         guardians,
         filteredAnimals,
         statusFilter,
-        setStatusFilter
+        setStatusFilter,
+        tokenHolders,
+        userTokens,
+        addTokens,
+        convertTokens
       }}
     >
       {children}
