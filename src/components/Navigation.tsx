@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { MapPin, List } from 'lucide-react';
+import { MapPin, List, BarChart } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
 const Navigation = () => {
@@ -35,6 +35,20 @@ const Navigation = () => {
       >
         <List className="w-4 h-4" />
         {!isMobile && <span>Animals List</span>}
+      </NavLink>
+      
+      <NavLink 
+        to="/statistics" 
+        className={({ isActive }) => 
+          `flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium
+          ${isActive 
+            ? 'bg-primary/10 text-primary' 
+            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`
+        }
+      >
+        <BarChart className="w-4 h-4" />
+        {!isMobile && <span>Statistics</span>}
       </NavLink>
     </nav>
   );
