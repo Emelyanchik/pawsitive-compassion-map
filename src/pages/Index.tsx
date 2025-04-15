@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapProvider } from '@/contexts/MapContext';
 import MapComponent from '@/components/MapComponent';
 import Header from '@/components/Header';
 import ActionSidebar from '@/components/ActionSidebar';
@@ -49,49 +48,47 @@ const Index = () => {
   };
 
   return (
-    <MapProvider>
-      <div className={`h-screen w-full overflow-hidden ${darkMode ? 'dark' : ''}`} style={{
-        // Added CSS variables for pet map colors
-        '--petmap-orange': '#FFA500',
-        '--petmap-green': '#32CD32',
-        '--petmap-purple': '#9B30FF',
-        '--petmap-blue': '#0EA5E9'
-      } as React.CSSProperties}>
-        <Header />
-        <div className="pt-14 h-full relative">
-          <MapComponent />
-          
-          {/* Dark mode toggle */}
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="absolute top-4 left-4 z-10 rounded-full bg-white dark:bg-gray-800 shadow-md"
-            onClick={toggleDarkMode}
-          >
-            {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
-        </div>
+    <div className={`h-screen w-full overflow-hidden ${darkMode ? 'dark' : ''}`} style={{
+      // Added CSS variables for pet map colors
+      '--petmap-orange': '#FFA500',
+      '--petmap-green': '#32CD32',
+      '--petmap-purple': '#9B30FF',
+      '--petmap-blue': '#0EA5E9'
+    } as React.CSSProperties}>
+      <Header />
+      <div className="pt-14 h-full relative">
+        <MapComponent />
         
-        {/* Welcome overlay for first-time users */}
-        {welcomeVisible && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl max-w-md">
-              <h2 className="text-2xl font-bold mb-4">Welcome to PetMap!</h2>
-              <p className="mb-3">PetMap helps you locate and help animals in need around your area.</p>
-              <ul className="list-disc list-inside mb-4 space-y-1">
-                <li>Report animals that need help</li>
-                <li>Volunteer to help animals</li>
-                <li>Track animal status updates</li>
-                <li>Earn tokens for your contributions</li>
-              </ul>
-              <Button onClick={dismissWelcome} className="w-full">Get Started</Button>
-            </div>
-          </div>
-        )}
-        
-        <ActionSidebar />
+        {/* Dark mode toggle */}
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="absolute top-4 left-4 z-10 rounded-full bg-white dark:bg-gray-800 shadow-md"
+          onClick={toggleDarkMode}
+        >
+          {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </Button>
       </div>
-    </MapProvider>
+      
+      {/* Welcome overlay for first-time users */}
+      {welcomeVisible && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl max-w-md">
+            <h2 className="text-2xl font-bold mb-4">Welcome to PetMap!</h2>
+            <p className="mb-3">PetMap helps you locate and help animals in need around your area.</p>
+            <ul className="list-disc list-inside mb-4 space-y-1">
+              <li>Report animals that need help</li>
+              <li>Volunteer to help animals</li>
+              <li>Track animal status updates</li>
+              <li>Earn tokens for your contributions</li>
+            </ul>
+            <Button onClick={dismissWelcome} className="w-full">Get Started</Button>
+          </div>
+        </div>
+      )}
+      
+      <ActionSidebar />
+    </div>
   );
 };
 
