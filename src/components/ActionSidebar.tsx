@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -30,7 +30,8 @@ import {
   Bell,
   HandHelping,
   BadgePercent,
-  Coins
+  Coins,
+  Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AddAnimalForm } from './AddAnimalForm';
@@ -45,14 +46,24 @@ import { VolunteerPanel } from './VolunteerPanel';
 import { TokenHoldersPanel } from './TokenHoldersPanel';
 import { TokenConversionPanel } from './TokenConversionPanel';
 import { useToast } from '@/hooks/use-toast';
+import { RecentActivity } from './RecentActivity';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
-type ActivePanel = 'none' | 'add' | 'search' | 'filter' | 'donate' | 'report' | 'stats' | 'profile' | 'help' | 'share' | 'settings' | 'events' | 'saved' | 'notifications' | 'volunteer' | 'token-holders' | 'token-conversion';
+type ActivePanel = 'none' | 'add' | 'search' | 'filter' | 'donate' | 'report' | 'stats' | 'profile' | 'help' | 'share' | 'settings' | 'events' | 'saved' | 'notifications' | 'volunteer' | 'token-holders' | 'token-conversion' | 'recent-activity';
 
 const ActionSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePanel, setActivePanel] = useState<ActivePanel>('none');
   const { filter, setFilter, selectedAnimal } = useMap();
   const { toast } = useToast();
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  
+  useEffect(() => {
+    // Auto-collapse on mobile by default
+    if (isMobile) {
+      setIsCollapsed(true);
+    }
+  }, [isMobile]);
   
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   
@@ -90,6 +101,19 @@ const ActionSidebar = () => {
         return <TokenHoldersPanel onClose={() => setActivePanel('none')} />;
       case 'token-conversion':
         return <TokenConversionPanel onClose={() => setActivePanel('none')} />;
+      case 'recent-activity':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Recent Activity</h2>
+              <Button variant="ghost" size="icon" onClick={() => setActivePanel('none')}>
+                <span className="sr-only">Close</span>
+                <X className="h-6 w-6" />
+              </Button>
+            </div>
+            <RecentActivity />
+          </div>
+        );
       // New panels will be implemented in future updates
       case 'help':
       case 'share':
@@ -110,7 +134,7 @@ const ActionSidebar = () => {
           </div>
         );
       default:
-        return selectedAnimal ? <AnimalDetails /> : null;
+        return selectedAnimal ? <AnimalDetails /> : <RecentActivity />;
     }
   };
 
@@ -120,7 +144,7 @@ const ActionSidebar = () => {
       isCollapsed ? "w-16" : activePanel !== 'none' || selectedAnimal ? "w-96" : "w-16"
     )}>
       {/* Main sidebar with action buttons */}
-      <div className="h-full flex flex-col bg-white shadow-lg border-l border-gray-200 z-50">
+      <div className="h-full flex flex-col bg-white dark:bg-gray-800 shadow-lg border-l border-gray-200 dark:border-gray-700 z-50">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -146,7 +170,7 @@ const ActionSidebar = () => {
             <Button
               variant={activePanel === 'search' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('search')}
               title="Search"
             >
@@ -156,14 +180,24 @@ const ActionSidebar = () => {
             <Button
               variant={activePanel === 'filter' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('filter')}
               title="Filter"
             >
               <Filter className="h-6 w-6" />
             </Button>
             
-            <Separator className="w-8 bg-gray-200" />
+            <Button
+              variant={activePanel === 'recent-activity' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+              onClick={() => openPanel('recent-activity')}
+              title="Recent Activity"
+            >
+              <Activity className="h-6 w-6" />
+            </Button>
+            
+            <Separator className="w-8 bg-gray-200 dark:bg-gray-600" />
             
             {/* Filter shortcuts */}
             <Button
@@ -173,7 +207,7 @@ const ActionSidebar = () => {
                 "rounded-full h-12 w-12 border", 
                 filter === 'all' 
                   ? "bg-petmap-blue text-white hover:bg-petmap-blue/90" 
-                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               )}
               onClick={() => setFilter('all')}
               title="All Pets"
@@ -188,7 +222,7 @@ const ActionSidebar = () => {
                 "rounded-full h-12 w-12 border", 
                 filter === 'cats' 
                   ? "bg-petmap-green text-white hover:bg-petmap-green/90" 
-                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               )}
               onClick={() => setFilter('cats')}
               title="Cats Only"
@@ -203,7 +237,7 @@ const ActionSidebar = () => {
                 "rounded-full h-12 w-12 border", 
                 filter === 'dogs' 
                   ? "bg-petmap-orange text-white hover:bg-petmap-orange/90" 
-                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               )}
               onClick={() => setFilter('dogs')}
               title="Dogs Only"
@@ -222,13 +256,13 @@ const ActionSidebar = () => {
               <HandHelping className="h-6 w-6" />
             </Button>
             
-            <Separator className="w-8 bg-gray-200" />
+            <Separator className="w-8 bg-gray-200 dark:bg-gray-600" />
 
             {/* Token Management */}
             <Button
               variant={activePanel === 'token-holders' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('token-holders')}
               title="Token Holders Ranking"
             >
@@ -238,20 +272,20 @@ const ActionSidebar = () => {
             <Button
               variant={activePanel === 'token-conversion' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('token-conversion')}
               title="Convert Tokens"
             >
               <Coins className="h-6 w-6" />
             </Button>
 
-            <Separator className="w-8 bg-gray-200" />
+            <Separator className="w-8 bg-gray-200 dark:bg-gray-600" />
 
             {/* Financial & Reporting */}
             <Button
               variant={activePanel === 'donate' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('donate')}
               title="Donate"
             >
@@ -261,7 +295,7 @@ const ActionSidebar = () => {
             <Button
               variant={activePanel === 'report' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('report')}
               title="Report Concern"
             >
@@ -271,20 +305,20 @@ const ActionSidebar = () => {
             <Button
               variant={activePanel === 'stats' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('stats')}
               title="Statistics"
             >
               <BarChart4 className="h-6 w-6" />
             </Button>
             
-            <Separator className="w-8 bg-gray-200" />
+            <Separator className="w-8 bg-gray-200 dark:bg-gray-600" />
 
             {/* Additional Buttons */}
             <Button
               variant={activePanel === 'help' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('help')}
               title="Help & Resources"
             >
@@ -294,7 +328,7 @@ const ActionSidebar = () => {
             <Button
               variant={activePanel === 'share' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('share')}
               title="Share Map"
             >
@@ -304,7 +338,7 @@ const ActionSidebar = () => {
             <Button
               variant={activePanel === 'settings' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('settings')}
               title="Map Settings"
             >
@@ -314,7 +348,7 @@ const ActionSidebar = () => {
             <Button
               variant={activePanel === 'events' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('events')}
               title="Pet Events"
             >
@@ -324,7 +358,7 @@ const ActionSidebar = () => {
             <Button
               variant={activePanel === 'saved' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('saved')}
               title="Saved Animals"
             >
@@ -334,20 +368,20 @@ const ActionSidebar = () => {
             <Button
               variant={activePanel === 'notifications' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('notifications')}
               title="Notifications"
             >
               <Bell className="h-6 w-6" />
             </Button>
             
-            <Separator className="w-8 bg-gray-200" />
+            <Separator className="w-8 bg-gray-200 dark:bg-gray-600" />
             
             {/* User Settings */}
             <Button
               variant={activePanel === 'profile' ? "default" : "ghost"}
               size="icon"
-              className="rounded-full h-12 w-12 bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               onClick={() => openPanel('profile')}
               title="Profile"
             >
@@ -359,7 +393,7 @@ const ActionSidebar = () => {
       
       {/* Content panel */}
       {!isCollapsed && (activePanel !== 'none' || selectedAnimal) && (
-        <div className="h-full bg-white flex-1 shadow-xl border-l border-gray-200 animate-slide-in overflow-hidden">
+        <div className="h-full bg-white dark:bg-gray-800 flex-1 shadow-xl border-l border-gray-200 dark:border-gray-700 animate-slide-in overflow-hidden">
           <ScrollArea className="h-full p-4">
             {renderActivePanel()}
           </ScrollArea>

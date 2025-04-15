@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMap } from '../contexts/MapContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { Compass, MapPin, Plus, Minus, Dog, Cat, Circle } from 'lucide-react';
+import { Compass, MapPin, Plus, Minus, Dog, Cat } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { AddAnimalForm } from './AddAnimalForm';
 import AnimalDetailsDialog from './AnimalDetailsDialog';
