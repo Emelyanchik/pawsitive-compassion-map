@@ -1,55 +1,36 @@
 
 import React from 'react';
-import { MapPin } from 'lucide-react';
-import { useMap } from '@/contexts/MapContext';
-import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
+import { Coins } from 'lucide-react';
+import { Badge } from './ui/badge';
+import Navigation from './Navigation';
 
 const Header = () => {
-  const { filter, setFilter } = useMap();
-  
   return (
-    <header className="fixed top-0 left-0 right-0 z-30 bg-gradient-to-r from-petmap-purple to-petmap-blue py-3 px-4 flex items-center justify-between shadow-md">
-      <div className="flex items-center gap-2">
-        <MapPin className="h-6 w-6 text-white" />
-        <h1 className="text-xl font-bold text-white">PetMap</h1>
-      </div>
-      
-      <div className="flex gap-4">
-        <button 
-          className={cn(
-            "px-3 py-1 rounded-full text-sm font-medium transition-colors",
-            filter === 'all' 
-              ? "bg-white text-primary" 
-              : "bg-transparent text-white hover:bg-white/20"
-          )}
-          onClick={() => setFilter('all')}
-        >
-          All Pets
-        </button>
+    <header className="fixed top-0 left-0 right-0 h-14 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-50 flex items-center px-4 shadow-sm">
+      <div className="flex-1 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <a href="/" className="flex items-center gap-2">
+            <span className="font-bold text-lg text-petmap-purple">PetMap</span>
+            <Badge variant="purple" className="hidden md:inline-flex">Beta</Badge>
+          </a>
+          
+          <Navigation />
+        </div>
         
-        <button 
-          className={cn(
-            "px-3 py-1 rounded-full text-sm font-medium transition-colors",
-            filter === 'cats' 
-              ? "bg-white text-primary" 
-              : "bg-transparent text-white hover:bg-white/20"
-          )}
-          onClick={() => setFilter('cats')}
-        >
-          Cats Only
-        </button>
-        
-        <button 
-          className={cn(
-            "px-3 py-1 rounded-full text-sm font-medium transition-colors",
-            filter === 'dogs' 
-              ? "bg-white text-primary" 
-              : "bg-transparent text-white hover:bg-white/20"
-          )}
-          onClick={() => setFilter('dogs')}
-        >
-          Dogs Only
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-1 text-sm">
+            <Coins className="h-4 w-4 text-yellow-500" />
+            <span className="font-medium">120</span>
+            <span className="text-muted-foreground">tokens</span>
+          </div>
+          
+          <Button size="sm" variant="outline" className="hidden md:inline-flex">
+            Login
+          </Button>
+          
+          <Button size="sm">Sign Up</Button>
+        </div>
       </div>
     </header>
   );
