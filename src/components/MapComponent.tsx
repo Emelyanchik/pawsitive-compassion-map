@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -28,7 +29,6 @@ const MapComponent: React.FC = () => {
   const [clickedLocation, setClickedLocation] = useState<[number, number] | null>(null);
   const [isAddAnimalDialogOpen, setIsAddAnimalDialogOpen] = useState(false);
   const [isAnimalDetailsOpen, setIsAnimalDetailsOpen] = useState(false);
-  const radiusCircleRef = useRef<mapboxgl.Circle | null>(null);
 
   const setupMap = () => {
     if (!mapContainer.current || !mapboxToken) return;

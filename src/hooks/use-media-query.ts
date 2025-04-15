@@ -7,10 +7,19 @@ import { useState, useEffect } from 'react';
  * @returns boolean indicating if the media query matches
  */
 export function useMediaQuery(query: string): boolean {
-  // Initialize with default value, which we assume is false for SSR compatibility
-  const [matches, setMatches] = useState(false);
+  // Initialize with default value based on browser capability
+  const [matches, setMatches] = useState(() => {
+    // Check if window exists (client-side)
+    if (typeof window !== 'undefined') {
+      return window.matchMedia(query).matches;
+    }
+    return false; // Default for SSR
+  });
 
   useEffect(() => {
+    // Only run on client-side
+    if (typeof window === 'undefined') return;
+    
     // Create a media query list
     const media = window.matchMedia(query);
     
@@ -33,3 +42,18 @@ export function useMediaQuery(query: string): boolean {
 
   return matches;
 }
+
+/**
+ * Predefined breakpoint queries for easy use
+ */
+export const breakpoints = {
+  sm: '(min-width: 640px)',
+  md: '(min-width: 768px)',
+  lg: '(min-width: 1024px)',
+  xl: '(min-width: 1280px)',
+  '2xl': '(min-width: 1536px)',
+  dark: '(prefers-color-scheme: dark)',
+  light: '(prefers-color-scheme: light)',
+  portrait: '(orientation: portrait)',
+  landscape: '(orientation: landscape)',
+};
