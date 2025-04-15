@@ -1,10 +1,20 @@
 
 import React from 'react';
 import { Button } from './ui/button';
-import { Coins } from 'lucide-react';
+import { Coins, User } from 'lucide-react';
 import { Badge } from './ui/badge';
 import Navigation from './Navigation';
 import { useMap } from '@/contexts/MapContext';
+import { Link } from 'react-router-dom';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from './ui/avatar';
 
 const Header = () => {
   const { userTokens } = useMap();
@@ -27,6 +37,36 @@ const Header = () => {
             <span className="font-medium">{userTokens}</span>
             <span className="text-muted-foreground">tokens</span>
           </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="ghost" className="rounded-full h-8 w-8 p-0">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-petmap-purple text-white text-sm">
+                    JS
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/profile" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Coins className="mr-2 h-4 w-4" />
+                <span>{userTokens} tokens</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           <Button size="sm" variant="outline" className="hidden md:inline-flex">
             Login
