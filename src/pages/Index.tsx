@@ -4,6 +4,7 @@ import MapComponent from '@/components/MapComponent';
 import AnimalListView from '@/components/AnimalListView';
 import Header from '@/components/Header';
 import ActionSidebar from '@/components/ActionSidebar';
+import StatusFilterCards from '@/components/StatusFilterCards';
 import { Moon, Sun, Map, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -69,8 +70,16 @@ const Index = () => {
       '--petmap-blue': '#0EA5E9'
     } as React.CSSProperties}>
       <Header />
-      <div className="pt-14 h-full relative">
-        {viewMode === 'map' ? <MapComponent /> : <AnimalListView />}
+      <div className="pt-14 h-full relative flex flex-col">
+        {/* Status filter cards at the top */}
+        <div className="z-10 bg-white dark:bg-gray-800 shadow-sm">
+          <StatusFilterCards />
+        </div>
+        
+        {/* Main content area */}
+        <div className="flex-1 relative overflow-hidden">
+          {viewMode === 'map' ? <MapComponent /> : <AnimalListView />}
+        </div>
         
         {/* Dark mode toggle */}
         <Button 

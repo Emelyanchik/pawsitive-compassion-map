@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Info, Heart, PawPrint, Clock } from 'lucide-react';
 import AnimalDetailsDialog from './AnimalDetailsDialog';
+import { format } from 'date-fns';
 
 const AnimalListView = () => {
   const { filteredAnimals, setSelectedAnimal } = useMap();
@@ -38,6 +39,15 @@ const AnimalListView = () => {
     if (type === 'cat') return <PawPrint className="h-4 w-4 text-petmap-green" />;
     if (type === 'dog') return <PawPrint className="h-4 w-4 text-petmap-orange" />;
     return <PawPrint className="h-4 w-4" />;
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, 'MMM d, yyyy');
+    } catch {
+      return dateString;
+    }
   };
 
   if (filteredAnimals.length === 0) {
@@ -78,7 +88,7 @@ const AnimalListView = () => {
                   <span className="capitalize">{animal.type}</span>
                   <span className="text-gray-300">•</span>
                   <Clock className="h-3.5 w-3.5" />
-                  <span>{animal.reportDate}</span>
+                  <span>{formatDate(animal.reportedAt)}</span>
                 </div>
                 
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
