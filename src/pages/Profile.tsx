@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useMap } from '@/contexts/MapContext';
 import { 
   Card, 
@@ -21,16 +21,22 @@ import {
   Clock, 
   Shield, 
   Coins,
-  Calendar
+  Calendar,
+  BarChart,
+  FileText,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import Header from '@/components/Header';
+import TokenActivity from '@/components/TokenActivity';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const ProfilePage = () => {
   const { userTokens, animals } = useMap();
+  const [dataView, setDataView] = useState<'progress' | 'stats' | 'activity'>('progress');
   
   // Example user data - in a real app, this would come from the backend
   const userProfile = {
@@ -44,7 +50,8 @@ const ProfilePage = () => {
     tokensEarned: userTokens || 250,
     level: 3,
     animalsHelped: 12,
-    animalsSaved: 7
+    animalsSaved: 7,
+    totalContributions: 24
   };
   
   const reportedAnimals = animals.filter(animal => animal.reportedBy === userProfile.username);
@@ -83,13 +90,73 @@ const ProfilePage = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Level Progress</p>
-                  <Progress value={progress} className="h-2" />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {Math.round(progress)}% to Level {userProfile.level + 1}
-                  </p>
-                </div>
+                <ToggleGroup 
+                  type="single" 
+                  value={dataView} 
+                  onValueChange={(value) => value && setDataView(value as 'progress' | 'stats' | 'activity')}
+                  className="justify-center mb-4"
+                >
+                  <ToggleGroupItem value="progress" aria-label="View progress">
+                    <BarChart className="h-4 w-4 mr-2" />
+                    Progress
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="stats" aria-label="View stats">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Stats
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="activity" aria-label="View activity">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Activity
+                  </ToggleGroupItem>
+                </ToggleGroup>
+
+                {dataView === 'progress' && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Level Progress</p>
+                    <Progress value={progress} className="h-2" />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {Math.round(progress)}% to Level {userProfile.level + 1}
+                    </p>
+                  </div>
+                )}
+                
+                {dataView === 'stats' && (
+                  <div>
+                    <div className="text-center mb-2">
+                      <div className="text-4xl font-bold">{userProfile.totalContributions}</div>
+                      <p className="text-sm text-muted-foreground">Total Contributions</p>
+                    </div>
+                    <Separator className="my-2" />
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                        <p className="text-xl font-bold">{userProfile.animalsHelped}</p>
+                        <p className="text-xs text-muted-foreground">Helped</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                        <p className="text-xl font-bold">{userProfile.animalsSaved}</p>
+                        <p className="text-xs text-muted-foreground">Saved</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {dataView === 'activity' && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Last week</span>
+                      <span className="font-medium">12 actions</span>
+                    </div>
+                    <div className="flex gap-1">
+                      {Array.from({length: 7}).map((_, i) => (
+                        <div 
+                          key={i} 
+                          className={`h-6 flex-1 rounded-sm ${i % 3 === 0 ? 'bg-petmap-purple/70' : 'bg-petmap-purple/30'}`}
+                          style={{ height: `${Math.max(20, Math.random() * 80)}%` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 <Separator />
                 
