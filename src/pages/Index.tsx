@@ -1,15 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
 import MapComponent from '@/components/MapComponent';
+import AnimalListView from '@/components/AnimalListView';
 import Header from '@/components/Header';
 import ActionSidebar from '@/components/ActionSidebar';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Map, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Toaster } from '@/components/ui/toaster';
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(true);
+  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
 
   useEffect(() => {
     // Check for saved preference
@@ -25,6 +27,12 @@ const Index = () => {
     } else {
       localStorage.setItem('hasVisited', 'true');
     }
+
+    // Check for saved view mode preference
+    const savedViewMode = localStorage.getItem('viewMode');
+    if (savedViewMode) {
+      setViewMode(savedViewMode as 'map' | 'list');
+    }
   }, []);
 
   useEffect(() => {
@@ -38,6 +46,11 @@ const Index = () => {
     // Save preference
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
+
+  useEffect(() => {
+    // Save view mode preference
+    localStorage.setItem('viewMode', viewMode);
+  }, [viewMode]);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -57,7 +70,7 @@ const Index = () => {
     } as React.CSSProperties}>
       <Header />
       <div className="pt-14 h-full relative">
-        <MapComponent />
+        {viewMode === 'map' ? <MapComponent /> : <AnimalListView />}
         
         {/* Dark mode toggle */}
         <Button 
@@ -68,6 +81,20 @@ const Index = () => {
         >
           {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
+
+        {/* View mode toggle */}
+        <div className="absolute top-4 left-20 z-10">
+          <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'map' | 'list')}>
+            <ToggleGroupItem value="map" aria-label="Map View" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+              <Map className="h-4 w-4 mr-2" />
+              Map
+            </ToggleGroupItem>
+            <ToggleGroupItem value="list" aria-label="List View" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+              <List className="h-4 w-4 mr-2" />
+              List
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
       </div>
       
       {/* Welcome overlay for first-time users */}
