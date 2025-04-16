@@ -9,6 +9,7 @@ import { Compass, MapPin, Plus, Minus, Dog, Cat } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { AddAnimalForm } from './AddAnimalForm';
 import AnimalDetailsDialog from './AnimalDetailsDialog';
+import MapLegend from './MapLegend';
 
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -299,6 +300,10 @@ const MapComponent: React.FC = () => {
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="absolute inset-0" />
+      
+      {/* Map Legend */}
+      <MapLegend />
+      
       <div className="absolute left-4 bottom-20 flex flex-col space-y-2">
         <Button 
           variant="secondary" 
