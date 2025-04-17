@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
-import { X, User, Settings, LogOut, Heart, MapPin, Bell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, User, Settings, LogOut, Heart, MapPin, Bell, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from 'next-themes';
 
 interface ProfilePanelProps {
   onClose: () => void;
@@ -14,8 +15,15 @@ interface ProfilePanelProps {
 
 export const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [locationSharing, setLocationSharing] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  
+  // Effect for theme initialization
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // Mock user data
   const user = {
@@ -39,6 +47,19 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
       description: "You have been logged out successfully.",
     });
   };
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+    toast({
+      title: "Theme Changed",
+      description: `Switched to ${theme === 'dark' ? 'light' : 'dark'} mode.`,
+    });
+  };
+  
+  // Avoid rendering theme-dependent UI elements before mount
+  if (!mounted) {
+    return null;
+  }
   
   return (
     <div className="relative animate-fade-in">
@@ -68,19 +89,19 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
       </div>
       
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="p-4 bg-gray-50 rounded-md text-center">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-md text-center">
           <div className="font-bold text-xl">{user.contributions}</div>
-          <div className="text-xs text-gray-500">Contributions</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Contributions</div>
         </div>
         
-        <div className="p-4 bg-gray-50 rounded-md text-center">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-md text-center">
           <div className="font-bold text-xl">{user.animals_helped}</div>
-          <div className="text-xs text-gray-500">Animals Helped</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Animals Helped</div>
         </div>
         
-        <div className="p-4 bg-gray-50 rounded-md text-center">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-md text-center">
           <div className="font-bold text-xl">{user.donations}</div>
-          <div className="text-xs text-gray-500">Donations</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Donations</div>
         </div>
       </div>
       
@@ -99,7 +120,7 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
                 <Bell className="h-4 w-4 inline mr-2" />
                 Email Notifications
               </Label>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Receive updates about animals in your area
               </p>
             </div>
@@ -116,7 +137,7 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
                 <MapPin className="h-4 w-4 inline mr-2" />
                 Location Sharing
               </Label>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Allow app to use your location for nearby animals
               </p>
             </div>
@@ -124,6 +145,27 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
               id="location-sharing"
               checked={locationSharing}
               onCheckedChange={setLocationSharing}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="theme-toggle" className="text-base">
+                {theme === 'dark' ? (
+                  <Moon className="h-4 w-4 inline mr-2" />
+                ) : (
+                  <Sun className="h-4 w-4 inline mr-2" />
+                )}
+                {theme === 'dark' ? 'Dark' : 'Light'} Mode
+              </Label>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Switch between light and dark theme
+              </p>
+            </div>
+            <Switch
+              id="theme-toggle"
+              checked={theme === 'dark'}
+              onCheckedChange={toggleTheme}
             />
           </div>
         </div>
@@ -149,7 +191,7 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({ onClose }) => {
       </div>
       
       <div className="mt-8 text-center">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           PetMap Demo App v1.0<br />
           Created with <Heart className="h-3 w-3 inline text-petmap-red" /> for animals
         </p>
