@@ -1,18 +1,26 @@
-
 import React, { useState, useEffect } from 'react';
 import MapComponent from '@/components/MapComponent';
 import AnimalListView from '@/components/AnimalListView';
 import Header from '@/components/Header';
 import ActionSidebar from '@/components/ActionSidebar';
 import StatusFilterCards from '@/components/StatusFilterCards';
-import { Moon, Sun, Map, List } from 'lucide-react';
+import { Moon, Sun, Map, List, Search, Share2, Bookmark, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Input } from '@/components/ui/input';
+import { useMap } from '@/contexts/MapContext';
+import QuickStatsBanner from '@/components/QuickStatsBanner';
+import SavedAnimalsPanel from '@/components/SavedAnimalsPanel';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(true);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSavedAnimals, setShowSavedAnimals] = useState(false);
+  const { animals, userLocation } = useMap();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Check for saved preference
@@ -61,6 +69,50 @@ const Index = () => {
     setWelcomeVisible(false);
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real implementation, this would connect to a geocoding API
+    toast({
+      title: "Search Feature",
+      description: `Searching for: ${searchQuery}`,
+    });
+    // Keep the search query for potential future implementation
+  };
+
+  const shareLocation = async () => {
+    if (userLocation) {
+      try {
+        await navigator.share({
+          title: 'My location on PetMap',
+          text: 'Check this location on PetMap!',
+          url: `https://maps.google.com/?q=${userLocation[1]},${userLocation[0]}`,
+        });
+        toast({
+          title: "Location Shared",
+          description: "Your current location has been shared!",
+        });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          toast({
+            title: "Sharing Failed",
+            description: "Could not share your location. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
+    } else {
+      toast({
+        title: "Location Unavailable",
+        description: "Please enable location services to share your position.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Calculate quick stats
+  const needsHelpCount = animals.filter(a => a.status === 'needs_help').length;
+  const totalAnimalsCount = animals.length;
+
   return (
     <div className={`h-screen w-full overflow-hidden ${darkMode ? 'dark' : ''}`} style={{
       // Added CSS variables for pet map colors
@@ -71,7 +123,52 @@ const Index = () => {
     } as React.CSSProperties}>
       <Header />
       <div className="pt-14 h-full relative flex flex-col">
-        {/* Status filter cards at the top */}
+        {/* Search bar and quick actions */}
+        <div className="z-20 bg-white dark:bg-gray-800 shadow-sm p-2 flex flex-wrap items-center justify-between gap-2">
+          <form onSubmit={handleSearch} className="flex-1 flex items-center min-w-[200px]">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search locations..."
+                className="pl-9 h-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Button type="submit" size="sm" className="ml-2 h-9">
+              Search
+            </Button>
+          </form>
+          
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="h-9 flex items-center gap-1"
+              onClick={() => setShowSavedAnimals(true)}
+            >
+              <Bookmark className="h-4 w-4" />
+              <span className="hidden sm:inline">Saved</span>
+              <span className="inline-flex items-center justify-center w-5 h-5 text-xs bg-primary text-white rounded-full">3</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-9 flex items-center gap-1"
+              onClick={shareLocation}
+            >
+              <Share2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Share Location</span>
+            </Button>
+          </div>
+        </div>
+        
+        {/* Quick stats banner */}
+        <QuickStatsBanner needsHelpCount={needsHelpCount} totalCount={totalAnimalsCount} />
+        
+        {/* Status filter cards */}
         <div className="z-10 bg-white dark:bg-gray-800 shadow-sm">
           <StatusFilterCards />
         </div>
@@ -122,6 +219,9 @@ const Index = () => {
           </div>
         </div>
       )}
+      
+      {/* Saved animals panel */}
+      <SavedAnimalsPanel open={showSavedAnimals} onClose={() => setShowSavedAnimals(false)} />
       
       <ActionSidebar />
     </div>
