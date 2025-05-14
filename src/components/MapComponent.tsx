@@ -5,11 +5,13 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMap } from '../contexts/MapContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { Compass, MapPin, Plus, Minus, Dog, Cat } from 'lucide-react';
+import { Compass, MapPin, Plus, Minus, Dog, Cat, Rotate3d, Ruler } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { AddAnimalForm } from './AddAnimalForm';
 import AnimalDetailsDialog from './AnimalDetailsDialog';
 import MapLegend from './MapLegend';
+import AreaLabeling from './AreaLabeling';
+import AreaLabelsLayer from './AreaLabelsLayer';
 
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -22,7 +24,11 @@ const MapComponent: React.FC = () => {
     mapboxToken,
     setMapboxToken,
     userLocation,
-    distanceFilter
+    distanceFilter,
+    mapRotation,
+    mapPitch,
+    setMapRotation,
+    setMapPitch
   } = useMap();
   const [mapTokenInput, setMapTokenInput] = useState('');
   const [isMapReady, setIsMapReady] = useState(false);
@@ -30,6 +36,7 @@ const MapComponent: React.FC = () => {
   const [clickedLocation, setClickedLocation] = useState<[number, number] | null>(null);
   const [isAddAnimalDialogOpen, setIsAddAnimalDialogOpen] = useState(false);
   const [isAnimalDetailsOpen, setIsAnimalDetailsOpen] = useState(false);
+  const [is3DMode, setIs3DMode] = useState(false);
 
   const setupMap = () => {
     if (!mapContainer.current || !mapboxToken) return;
@@ -42,6 +49,8 @@ const MapComponent: React.FC = () => {
         style: 'mapbox://styles/mapbox/streets-v12',
         center: userLocation || [0, 51.5],
         zoom: 12,
+        pitch: mapPitch,
+        bearing: mapRotation,
       });
 
       map.current.addControl(
@@ -68,6 +77,20 @@ const MapComponent: React.FC = () => {
 
       map.current.on('load', () => {
         setIsMapReady(true);
+      });
+
+      // Track rotation and pitch changes
+      map.current.on('rotate', () => {
+        if (map.current) {
+          setMapRotation(map.current.getBearing());
+          setMapPitch(map.current.getPitch());
+        }
+      });
+
+      map.current.on('pitch', () => {
+        if (map.current) {
+          setMapPitch(map.current.getPitch());
+        }
       });
 
       return () => {
@@ -251,6 +274,68 @@ const MapComponent: React.FC = () => {
     map.current?.zoomOut();
   };
 
+  const handleToggle3DMode = () => {
+    if (!map.current) return;
+
+    const newMode = !is3DMode;
+    setIs3DMode(newMode);
+    
+    map.current.flyTo({
+      pitch: newMode ? 60 : 0,
+      duration: 1000
+    });
+
+    // Update building extrusion layer
+    if (newMode) {
+      if (!map.current.getLayer('3d-buildings')) {
+        map.current.addLayer({
+          'id': '3d-buildings',
+          'source': 'composite',
+          'source-layer': 'building',
+          'filter': ['==', 'extrude', 'true'],
+          'type': 'fill-extrusion',
+          'minzoom': 15,
+          'paint': {
+            'fill-extrusion-color': '#aaa',
+            'fill-extrusion-height': [
+              'interpolate', ['linear'], ['zoom'],
+              15, 0,
+              16, ['get', 'height']
+            ],
+            'fill-extrusion-base': [
+              'interpolate', ['linear'], ['zoom'],
+              15, 0,
+              16, ['get', 'min_height']
+            ],
+            'fill-extrusion-opacity': 0.6
+          }
+        });
+      }
+    } else if (map.current.getLayer('3d-buildings')) {
+      map.current.removeLayer('3d-buildings');
+    }
+
+    toast({
+      title: newMode ? "3D Mode Enabled" : "3D Mode Disabled",
+      description: newMode ? "Showing buildings in 3D. Zoom in for more detail." : "Returned to 2D view.",
+    });
+  };
+
+  const resetMapRotation = () => {
+    if (!map.current) return;
+    
+    map.current.flyTo({
+      bearing: 0,
+      pitch: is3DMode ? 60 : 0,
+      duration: 1000
+    });
+    
+    toast({
+      title: "Map Orientation Reset",
+      description: "Map rotation has been reset to north.",
+    });
+  };
+
   useEffect(() => {
     const storedToken = localStorage.getItem('mapbox_token');
     if (storedToken) {
@@ -304,6 +389,10 @@ const MapComponent: React.FC = () => {
       {/* Map Legend */}
       <MapLegend />
       
+      {/* Area Labeling */}
+      <AreaLabeling map={map.current} />
+      <AreaLabelsLayer map={map.current} />
+      
       <div className="absolute left-4 bottom-20 flex flex-col space-y-2">
         <Button 
           variant="secondary" 
@@ -329,6 +418,24 @@ const MapComponent: React.FC = () => {
         >
           <Compass className="w-5 h-5 text-gray-700" />
         </Button>
+        <Button 
+          variant="secondary" 
+          size="icon" 
+          className={`rounded-full bg-white shadow-md hover:bg-gray-100 ${is3DMode ? 'bg-blue-100' : ''}`}
+          onClick={handleToggle3DMode}
+        >
+          <Rotate3d className="w-5 h-5 text-gray-700" />
+        </Button>
+        {(mapRotation !== 0 || mapPitch !== 0) && (
+          <Button 
+            variant="secondary" 
+            size="icon" 
+            className="rounded-full bg-white shadow-md hover:bg-gray-100"
+            onClick={resetMapRotation}
+          >
+            <Ruler className="w-5 h-5 text-gray-700" />
+          </Button>
+        )}
       </div>
 
       <Dialog open={isAddAnimalDialogOpen} onOpenChange={setIsAddAnimalDialogOpen}>

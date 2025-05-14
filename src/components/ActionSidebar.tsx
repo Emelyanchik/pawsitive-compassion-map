@@ -31,7 +31,8 @@ import {
   HandHelping,
   BadgePercent,
   Coins,
-  Activity
+  Activity,
+  MapPinned
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AddAnimalForm } from './AddAnimalForm';
@@ -48,13 +49,15 @@ import { TokenConversionPanel } from './TokenConversionPanel';
 import { useToast } from '@/hooks/use-toast';
 import { RecentActivity } from './RecentActivity';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { AreasPanel } from './AreasPanel';
+import { Badge } from '@/components/ui/badge';
 
-type ActivePanel = 'none' | 'add' | 'search' | 'filter' | 'donate' | 'report' | 'stats' | 'profile' | 'help' | 'share' | 'settings' | 'events' | 'saved' | 'notifications' | 'volunteer' | 'token-holders' | 'token-conversion' | 'recent-activity';
+type ActivePanel = 'none' | 'add' | 'search' | 'filter' | 'donate' | 'report' | 'stats' | 'profile' | 'help' | 'share' | 'settings' | 'events' | 'saved' | 'notifications' | 'volunteer' | 'token-holders' | 'token-conversion' | 'recent-activity' | 'areas';
 
 const ActionSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePanel, setActivePanel] = useState<ActivePanel>('none');
-  const { filter, setFilter, selectedAnimal } = useMap();
+  const { filter, setFilter, selectedAnimal, areaLabels } = useMap();
   const { toast } = useToast();
   const isMobile = useMediaQuery("(max-width: 768px)");
   
@@ -101,6 +104,8 @@ const ActionSidebar = () => {
         return <TokenHoldersPanel onClose={() => setActivePanel('none')} />;
       case 'token-conversion':
         return <TokenConversionPanel onClose={() => setActivePanel('none')} />;
+      case 'areas':
+        return <AreasPanel onClose={() => setActivePanel('none')} />;
       case 'recent-activity':
         return (
           <div className="space-y-6">
@@ -185,6 +190,21 @@ const ActionSidebar = () => {
               title="Filter"
             >
               <Filter className="h-6 w-6" />
+            </Button>
+            
+            <Button
+              variant={activePanel === 'areas' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 relative"
+              onClick={() => openPanel('areas')}
+              title="Marked Areas"
+            >
+              <MapPinned className="h-6 w-6" />
+              {areaLabels.length > 0 && (
+                <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center">
+                  {areaLabels.length}
+                </Badge>
+              )}
             </Button>
             
             <Button

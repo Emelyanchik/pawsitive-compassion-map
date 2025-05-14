@@ -16,6 +16,15 @@ export interface Animal {
   guardian?: string;
 }
 
+export interface AreaLabel {
+  id: string;
+  label: string;
+  description: string;
+  coordinates: [number, number][];
+  visible?: boolean;
+  createdAt: string;
+}
+
 interface Guardian {
   name: string;
   telegramUsername?: string;
@@ -55,6 +64,14 @@ interface MapContextType {
   userTokens: number;
   addTokens: (amount: number, reason: string) => void;
   convertTokens: (amount: number, rewardType: string) => boolean;
+  areaLabels: AreaLabel[];
+  addAreaLabel: (area: Omit<AreaLabel, 'visible'>) => void;
+  removeAreaLabel: (id: string) => void;
+  toggleAreaVisibility: (id: string) => void;
+  mapRotation: number;
+  mapPitch: number;
+  setMapRotation: React.Dispatch<React.SetStateAction<number>>;
+  setMapPitch: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
@@ -106,6 +123,36 @@ const initialAnimals: Animal[] = [
     longitude: -0.141,
     status: 'reported',
     reportedAt: new Date().toISOString()
+  }
+];
+
+// Sample area labels
+const initialAreaLabels: AreaLabel[] = [
+  {
+    id: '1',
+    label: 'Cat Colony',
+    description: 'Large group of stray cats regularly seen here',
+    coordinates: [
+      [-0.127, 51.506],
+      [-0.125, 51.508],
+      [-0.129, 51.509],
+      [-0.131, 51.507]
+    ],
+    createdAt: new Date().toISOString(),
+    visible: true
+  },
+  {
+    id: '2',
+    label: 'Dog Sightings',
+    description: 'Multiple stray dogs reported in this park',
+    coordinates: [
+      [-0.135, 51.513],
+      [-0.133, 51.515],
+      [-0.137, 51.516],
+      [-0.139, 51.514]
+    ],
+    createdAt: new Date().toISOString(),
+    visible: true
   }
 ];
 
@@ -171,6 +218,9 @@ export const MapProvider = ({ children }: MapProviderProps) => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [tokenHolders, setTokenHolders] = useState<TokenHolder[]>(initialTokenHolders);
   const [userTokens, setUserTokens] = useState<number>(320); // Starting tokens for the user
+  const [areaLabels, setAreaLabels] = useState<AreaLabel[]>(initialAreaLabels);
+  const [mapRotation, setMapRotation] = useState<number>(0);
+  const [mapPitch, setMapPitch] = useState<number>(0);
 
   // Detect user location
   useEffect(() => {
@@ -349,6 +399,25 @@ export const MapProvider = ({ children }: MapProviderProps) => {
     return true;
   };
 
+  // New area label functions
+  const addAreaLabel = (area: Omit<AreaLabel, 'visible'>) => {
+    const newArea = {
+      ...area,
+      visible: true
+    };
+    setAreaLabels(prev => [...prev, newArea]);
+  };
+
+  const removeAreaLabel = (id: string) => {
+    setAreaLabels(prev => prev.filter(area => area.id !== id));
+  };
+
+  const toggleAreaVisibility = (id: string) => {
+    setAreaLabels(prev => prev.map(area => 
+      area.id === id ? { ...area, visible: area.visible === false } : area
+    ));
+  };
+
   return (
     <MapContext.Provider
       value={{
@@ -374,7 +443,15 @@ export const MapProvider = ({ children }: MapProviderProps) => {
         tokenHolders,
         userTokens,
         addTokens,
-        convertTokens
+        convertTokens,
+        areaLabels,
+        addAreaLabel,
+        removeAreaLabel,
+        toggleAreaVisibility,
+        mapRotation,
+        mapPitch,
+        setMapRotation,
+        setMapPitch
       }}
     >
       {children}
