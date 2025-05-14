@@ -1,17 +1,17 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMap } from '../contexts/MapContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { Compass, MapPin, Plus, Minus, Dog, Cat, Rotate3d, Ruler } from 'lucide-react';
+import { Compass, MapPin, Plus, Minus, Dog, Cat, Rotate3d, Ruler, Maximize2, Minimize2, Navigation, MousePointer, Target } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { AddAnimalForm } from './AddAnimalForm';
 import AnimalDetailsDialog from './AnimalDetailsDialog';
 import MapLegend from './MapLegend';
 import AreaLabeling from './AreaLabeling';
 import AreaLabelsLayer from './AreaLabelsLayer';
+import MapToolsPopup from './MapToolsPopup';
 
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -37,6 +37,13 @@ const MapComponent: React.FC = () => {
   const [isAddAnimalDialogOpen, setIsAddAnimalDialogOpen] = useState(false);
   const [isAnimalDetailsOpen, setIsAnimalDetailsOpen] = useState(false);
   const [is3DMode, setIs3DMode] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isToolsPopupOpen, setIsToolsPopupOpen] = useState(false);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [isLiveTracking, setIsLiveTracking] = useState(false);
+  const [measurePoints, setMeasurePoints] = useState<Array<[number, number]>>([]);
+  const measureSourceRef = useRef<mapboxgl.GeoJSONSource | null>(null);
+  const watchPositionRef = useRef<number | null>(null);
 
   const setupMap = () => {
     if (!mapContainer.current || !mapboxToken) return;
@@ -67,6 +74,12 @@ const MapComponent: React.FC = () => {
           targetElement.className.toString().startsWith('mapboxgl-') || 
           targetElement.closest('.animal-marker');
         
+        // Handle click based on active tool
+        if (activeTool === 'measure') {
+          handleMeasureClick(e.lngLat);
+          return;
+        }
+        
         // Only open the add animal dialog if we clicked directly on the map (not on a marker)
         if (!targetElement.closest('.animal-marker')) {
           const { lng, lat } = e.lngLat;
@@ -77,6 +90,48 @@ const MapComponent: React.FC = () => {
 
       map.current.on('load', () => {
         setIsMapReady(true);
+        
+        // Add measure line source and layer
+        map.current?.addSource('measure-line', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: []
+            }
+          }
+        });
+        
+        map.current?.addLayer({
+          id: 'measure-line',
+          type: 'line',
+          source: 'measure-line',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': '#f33',
+            'line-width': 2,
+            'line-dasharray': [2, 1]
+          }
+        });
+        
+        map.current?.addLayer({
+          id: 'measure-points',
+          type: 'circle',
+          source: 'measure-line',
+          paint: {
+            'circle-radius': 5,
+            'circle-color': '#f33'
+          },
+          filter: ['in', '$type', 'Point']
+        });
+        
+        // Store reference to the source
+        measureSourceRef.current = map.current?.getSource('measure-line') as mapboxgl.GeoJSONSource;
       });
 
       // Track rotation and pitch changes
@@ -94,6 +149,9 @@ const MapComponent: React.FC = () => {
       });
 
       return () => {
+        if (watchPositionRef.current !== null) {
+          navigator.geolocation.clearWatch(watchPositionRef.current);
+        }
         map.current?.remove();
       };
     } catch (error) {
@@ -336,6 +394,186 @@ const MapComponent: React.FC = () => {
     });
   };
 
+  // Handle fullscreen toggle
+  const toggleFullscreen = () => {
+    const mapElement = mapContainer.current;
+    if (!mapElement) return;
+
+    if (!isFullscreen) {
+      if (mapElement.requestFullscreen) {
+        mapElement.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  // Handle fullscreen change events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Measurement tool functions
+  const handleMeasureClick = (lngLat: mapboxgl.LngLat) => {
+    const newPoint: [number, number] = [lngLat.lng, lngLat.lat];
+    const newPoints = [...measurePoints, newPoint];
+    setMeasurePoints(newPoints);
+    
+    if (measureSourceRef.current) {
+      const data = {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: newPoints
+        }
+      } as GeoJSON.Feature<GeoJSON.LineString>;
+      
+      measureSourceRef.current.setData(data);
+      
+      // Calculate distance if we have at least 2 points
+      if (newPoints.length >= 2) {
+        const distance = calculateDistance(newPoints);
+        
+        toast({
+          title: "Distance Measurement",
+          description: `Total distance: ${distance.toFixed(2)} km`,
+        });
+      }
+    }
+  };
+  
+  const calculateDistance = (points: Array<[number, number]>): number => {
+    let totalDistance = 0;
+    
+    for (let i = 1; i < points.length; i++) {
+      const [lon1, lat1] = points[i - 1];
+      const [lon2, lat2] = points[i];
+      
+      const R = 6371; // Earth radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c;
+      
+      totalDistance += distance;
+    }
+    
+    return totalDistance;
+  };
+  
+  const resetMeasurement = () => {
+    setMeasurePoints([]);
+    if (measureSourceRef.current) {
+      measureSourceRef.current.setData({
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: []
+        }
+      });
+    }
+    setActiveTool(null);
+    toast({
+      title: "Measurement Tool Reset",
+      description: "Distance measurement has been cleared.",
+    });
+  };
+  
+  // Live location tracking
+  const toggleLiveTracking = () => {
+    if (isLiveTracking) {
+      // Stop tracking
+      if (watchPositionRef.current !== null) {
+        navigator.geolocation.clearWatch(watchPositionRef.current);
+        watchPositionRef.current = null;
+      }
+      setIsLiveTracking(false);
+      toast({
+        title: "Live Tracking Disabled",
+        description: "Your location is no longer being tracked.",
+      });
+    } else {
+      // Start tracking
+      if (!navigator.geolocation) {
+        toast({
+          title: "Geolocation Not Supported",
+          description: "Your browser does not support geolocation.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      toast({
+        title: "Live Tracking Enabled",
+        description: "Your location is now being tracked in real-time.",
+      });
+      
+      watchPositionRef.current = navigator.geolocation.watchPosition(
+        (position) => {
+          const { longitude, latitude } = position.coords;
+          
+          // Update user location in context
+          const newLocation: [number, number] = [longitude, latitude];
+          // This would update the user location in context, but we're keeping the original for now
+          
+          // Update map view
+          if (map.current) {
+            map.current.panTo(newLocation, { duration: 500 });
+          }
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          toast({
+            title: "Location Error",
+            description: "Failed to track your location. Please check your device settings.",
+            variant: "destructive",
+          });
+          setIsLiveTracking(false);
+          watchPositionRef.current = null;
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 10000, // 10 seconds
+          timeout: 5000
+        }
+      );
+      
+      setIsLiveTracking(true);
+    }
+  };
+
+  const toggleTool = (toolName: string) => {
+    if (activeTool === toolName) {
+      setActiveTool(null);
+      
+      if (toolName === 'measure') {
+        resetMeasurement();
+      }
+    } else {
+      setActiveTool(toolName);
+      
+      if (toolName === 'measure') {
+        toast({
+          title: "Measurement Tool Activated",
+          description: "Click on the map to add measurement points. Click the tool again to deactivate.",
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     const storedToken = localStorage.getItem('mapbox_token');
     if (storedToken) {
@@ -436,7 +674,61 @@ const MapComponent: React.FC = () => {
             <Ruler className="w-5 h-5 text-gray-700" />
           </Button>
         )}
+        <Button 
+          variant="secondary" 
+          size="icon" 
+          className="rounded-full bg-white shadow-md hover:bg-gray-100"
+          onClick={toggleFullscreen}
+        >
+          {isFullscreen ? (
+            <Minimize2 className="w-5 h-5 text-gray-700" />
+          ) : (
+            <Maximize2 className="w-5 h-5 text-gray-700" />
+          )}
+        </Button>
+        <Button 
+          variant="secondary" 
+          size="icon" 
+          className={`rounded-full bg-white shadow-md hover:bg-gray-100 ${isToolsPopupOpen ? 'bg-blue-100' : ''}`}
+          onClick={() => setIsToolsPopupOpen(!isToolsPopupOpen)}
+        >
+          <Target className="w-5 h-5 text-gray-700" />
+        </Button>
       </div>
+      
+      {/* Map Tools Popup */}
+      {isToolsPopupOpen && (
+        <div className="absolute left-20 bottom-20 bg-white p-2 rounded-lg shadow-lg flex flex-col gap-2 animate-fade-in">
+          <Button 
+            variant={activeTool === 'measure' ? "default" : "outline"}
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => toggleTool('measure')}
+          >
+            <Ruler className="w-4 h-4" />
+            <span>Measure Distance</span>
+          </Button>
+          <Button 
+            variant={isLiveTracking ? "default" : "outline"}
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={toggleLiveTracking}
+          >
+            <Navigation className="w-4 h-4" />
+            <span>{isLiveTracking ? 'Stop Tracking' : 'Live Tracking'}</span>
+          </Button>
+          {activeTool === 'measure' && measurePoints.length > 0 && (
+            <Button 
+              variant="destructive"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={resetMeasurement}
+            >
+              <span>Reset Measurement</span>
+            </Button>
+          )}
+        </div>
+      )}
 
       <Dialog open={isAddAnimalDialogOpen} onOpenChange={setIsAddAnimalDialogOpen}>
         <DialogContent className="max-w-md">

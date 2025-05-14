@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import MapComponent from '@/components/MapComponent';
 import AnimalListView from '@/components/AnimalListView';
@@ -12,6 +13,7 @@ import { useMap } from '@/contexts/MapContext';
 import QuickStatsBanner from '@/components/QuickStatsBanner';
 import SavedAnimalsPanel from '@/components/SavedAnimalsPanel';
 import { useToast } from '@/hooks/use-toast';
+import WeatherSummaryWidget from '@/components/WeatherSummaryWidget';
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -109,6 +111,15 @@ const Index = () => {
     }
   };
 
+  const openWeatherPanel = () => {
+    // This would communicate with the ActionSidebar to open the weather panel
+    // For now, we'll just show a toast message
+    toast({
+      title: "Weather Details",
+      description: "Open the sidebar and click on the weather icon for detailed information.",
+    });
+  };
+
   // Calculate quick stats
   const needsHelpCount = animals.filter(a => a.status === 'needs_help').length;
   const totalAnimalsCount = animals.length;
@@ -142,6 +153,12 @@ const Index = () => {
           </form>
           
           <div className="flex items-center gap-2">
+            {userLocation && (
+              <div className="mr-2">
+                <WeatherSummaryWidget onClick={openWeatherPanel} />
+              </div>
+            )}
+            
             <Button 
               variant="outline" 
               size="sm"

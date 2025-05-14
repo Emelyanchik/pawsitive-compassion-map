@@ -32,7 +32,8 @@ import {
   BadgePercent,
   Coins,
   Activity,
-  MapPinned
+  MapPinned,
+  CloudSun
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AddAnimalForm } from './AddAnimalForm';
@@ -51,8 +52,9 @@ import { RecentActivity } from './RecentActivity';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { AreasPanel } from './AreasPanel';
 import { Badge } from '@/components/ui/badge';
+import WeatherDisplay from './WeatherDisplay';
 
-type ActivePanel = 'none' | 'add' | 'search' | 'filter' | 'donate' | 'report' | 'stats' | 'profile' | 'help' | 'share' | 'settings' | 'events' | 'saved' | 'notifications' | 'volunteer' | 'token-holders' | 'token-conversion' | 'recent-activity' | 'areas';
+type ActivePanel = 'none' | 'add' | 'search' | 'filter' | 'donate' | 'report' | 'stats' | 'profile' | 'help' | 'share' | 'settings' | 'events' | 'saved' | 'notifications' | 'volunteer' | 'token-holders' | 'token-conversion' | 'recent-activity' | 'areas' | 'weather';
 
 const ActionSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -106,6 +108,37 @@ const ActionSidebar = () => {
         return <TokenConversionPanel onClose={() => setActivePanel('none')} />;
       case 'areas':
         return <AreasPanel onClose={() => setActivePanel('none')} />;
+      case 'weather':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Local Weather</h2>
+              <Button variant="ghost" size="icon" onClick={() => setActivePanel('none')}>
+                <span className="sr-only">Close</span>
+                <X className="h-6 w-6" />
+              </Button>
+            </div>
+            <p className="text-muted-foreground">Current weather conditions in your area. Helpful for planning pet rescues and outdoor activities.</p>
+            <WeatherDisplay />
+            <div className="space-y-4 mt-6">
+              <h3 className="text-lg font-semibold">Weather Impact on Animals</h3>
+              <div className="space-y-3">
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <h4 className="font-medium text-amber-800">Hot Weather</h4>
+                  <p className="text-sm text-amber-700 mt-1">Ensure animals have access to shade and water. Watch for signs of heat stroke.</p>
+                </div>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-medium text-blue-800">Cold Weather</h4>
+                  <p className="text-sm text-blue-700 mt-1">Provide shelter from the elements. Check for animals seeking warmth in dangerous places.</p>
+                </div>
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <h4 className="font-medium text-gray-800">Rain & Storms</h4>
+                  <p className="text-sm text-gray-700 mt-1">Animals may hide during storms. Check drainage areas after heavy rain.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
       case 'recent-activity':
         return (
           <div className="space-y-6">
@@ -205,6 +238,16 @@ const ActionSidebar = () => {
                   {areaLabels.length}
                 </Badge>
               )}
+            </Button>
+            
+            <Button
+              variant={activePanel === 'weather' ? "default" : "ghost"}
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+              onClick={() => openPanel('weather')}
+              title="Weather"
+            >
+              <CloudSun className="h-6 w-6" />
             </Button>
             
             <Button
@@ -409,6 +452,20 @@ const ActionSidebar = () => {
             </Button>
           </div>
         </ScrollArea>
+        
+        {/* Mini Weather Widget when sidebar is collapsed */}
+        {isCollapsed && (
+          <div className="px-2 pb-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full h-12 w-12 bg-white dark:bg-gray-700 border border-gray-200 hover:bg-gray-100"
+              onClick={() => openPanel('weather')}
+            >
+              <CloudSun className="h-6 w-6 text-blue-500" />
+            </Button>
+          </div>
+        )}
       </div>
       
       {/* Content panel */}
