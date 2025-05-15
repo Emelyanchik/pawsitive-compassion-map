@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMap } from '../contexts/MapContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { Compass, MapPin, Plus, Minus, Dog, Cat, Rotate3d, Ruler, Maximize2, Minimize2, Navigation, MousePointer, Target } from 'lucide-react';
+import { Compass, MapPin, Plus, Minus, Dog, Cat, Rotate3d, Ruler, Maximize2, Minimize2, Navigation, MousePointer, Target, Layers } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { AddAnimalForm } from './AddAnimalForm';
 import AnimalDetailsDialog from './AnimalDetailsDialog';
@@ -12,6 +12,7 @@ import MapLegend from './MapLegend';
 import AreaLabeling from './AreaLabeling';
 import AreaLabelsLayer from './AreaLabelsLayer';
 import MapToolsPopup from './MapToolsPopup';
+import MapClusterLayer from './MapClusterLayer';
 
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -44,6 +45,7 @@ const MapComponent: React.FC = () => {
   const [measurePoints, setMeasurePoints] = useState<Array<[number, number]>>([]);
   const measureSourceRef = useRef<mapboxgl.GeoJSONSource | null>(null);
   const watchPositionRef = useRef<number | null>(null);
+  const [useClusterView, setUseClusterView] = useState(false);
 
   const setupMap = () => {
     if (!mapContainer.current || !mapboxToken) return;
@@ -171,9 +173,9 @@ const MapComponent: React.FC = () => {
     }
   }, [mapboxToken]);
 
-  // Update map markers when filtered animals change
+  // Update map markers when filtered animals change and cluster view is not active
   useEffect(() => {
-    if (!isMapReady || !map.current) return;
+    if (!isMapReady || !map.current || useClusterView) return;
 
     // Remove all existing markers
     Object.values(markersRef.current).forEach(marker => marker.remove());
@@ -227,7 +229,7 @@ const MapComponent: React.FC = () => {
 
       markersRef.current[animal.id] = marker;
     });
-  }, [filteredAnimals, isMapReady]);
+  }, [filteredAnimals, isMapReady, useClusterView]);
 
   // Add distance circle when user location and distance filter change
   useEffect(() => {
@@ -574,6 +576,18 @@ const MapComponent: React.FC = () => {
     }
   };
 
+  const toggleClusterView = () => {
+    setUseClusterView(prev => !prev);
+    
+    // Show a toast message to inform the user
+    toast({
+      title: useClusterView ? "Cluster View Disabled" : "Cluster View Enabled",
+      description: useClusterView 
+        ? "Showing individual animal markers." 
+        : "Showing clusters of nearby animals.",
+    });
+  };
+
   useEffect(() => {
     const storedToken = localStorage.getItem('mapbox_token');
     if (storedToken) {
@@ -631,6 +645,9 @@ const MapComponent: React.FC = () => {
       <AreaLabeling map={map.current} />
       <AreaLabelsLayer map={map.current} />
       
+      {/* Add cluster layer when needed */}
+      {useClusterView && <MapClusterLayer map={map.current} />}
+      
       <div className="absolute left-4 bottom-20 flex flex-col space-y-2">
         <Button 
           variant="secondary" 
@@ -685,6 +702,15 @@ const MapComponent: React.FC = () => {
           ) : (
             <Maximize2 className="w-5 h-5 text-gray-700" />
           )}
+        </Button>
+        <Button 
+          variant="secondary" 
+          size="icon" 
+          className={`rounded-full bg-white shadow-md hover:bg-gray-100 ${useClusterView ? 'bg-blue-100' : ''}`}
+          onClick={toggleClusterView}
+          title={useClusterView ? "Show individual markers" : "Show cluster view"}
+        >
+          <Layers className="w-5 h-5 text-gray-700" />
         </Button>
         <Button 
           variant="secondary" 
