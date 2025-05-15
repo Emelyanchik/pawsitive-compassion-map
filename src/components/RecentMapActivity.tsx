@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Clock, Users, MapPin, Bookmark, AlertCircle } from 'lucide-react';
-import { formatDistance, calculateDistance } from '@/lib/geo-utils';
+import { formatDistance } from '@/lib/geo-utils';
 import { useMap } from '@/contexts/MapContext';
 import { useToast } from '@/hooks/use-toast';
 
