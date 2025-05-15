@@ -5,7 +5,7 @@ import AnimalListView from '@/components/AnimalListView';
 import Header from '@/components/Header';
 import ActionSidebar from '@/components/ActionSidebar';
 import StatusFilterCards from '@/components/StatusFilterCards';
-import { Moon, Sun, Map, List, Search, Share2, Bookmark, AlertCircle } from 'lucide-react';
+import { Moon, Sun, Map, List, Search, Share2, Bookmark, AlertCircle, Bell, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,11 @@ import QuickStatsBanner from '@/components/QuickStatsBanner';
 import SavedAnimalsPanel from '@/components/SavedAnimalsPanel';
 import { useToast } from '@/hooks/use-toast';
 import WeatherSummaryWidget from '@/components/WeatherSummaryWidget';
+import TopNotificationBanner from '@/components/TopNotificationBanner';
+import MapShareDialog from '@/components/MapShareDialog';
+import NotificationsPanel from '@/components/NotificationsPanel';
+import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -21,8 +26,29 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSavedAnimals, setShowSavedAnimals] = useState(false);
-  const { animals, userLocation } = useMap();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [mapShareOpen, setMapShareOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(3);
+  const { animals, userLocation, mapRotation, mapPitch } = useMap();
   const { toast } = useToast();
+
+  // Mock current map view for sharing
+  const [currentMapView, setCurrentMapView] = useState({
+    center: userLocation || [-0.127, 51.507],
+    zoom: 14,
+    pitch: mapPitch,
+    bearing: mapRotation
+  });
+
+  // Update current map view when the map changes
+  useEffect(() => {
+    setCurrentMapView(prev => ({
+      ...prev,
+      center: userLocation || prev.center,
+      pitch: mapPitch,
+      bearing: mapRotation
+    }));
+  }, [userLocation, mapPitch, mapRotation]);
 
   useEffect(() => {
     // Check for saved preference
@@ -120,6 +146,10 @@ const Index = () => {
     });
   };
 
+  const openShareMapDialog = () => {
+    setMapShareOpen(true);
+  };
+
   // Calculate quick stats
   const needsHelpCount = animals.filter(a => a.status === 'needs_help').length;
   const totalAnimalsCount = animals.length;
@@ -132,6 +162,7 @@ const Index = () => {
       '--petmap-purple': '#9B30FF',
       '--petmap-blue': '#0EA5E9'
     } as React.CSSProperties}>
+      <TopNotificationBanner />
       <Header />
       <div className="pt-14 h-full relative flex flex-col">
         {/* Search bar and quick actions */}
@@ -159,6 +190,29 @@ const Index = () => {
               </div>
             )}
             
+            <Sheet open={showNotifications} onOpenChange={setShowNotifications}>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-9 relative"
+                >
+                  <Bell className="h-4 w-4" />
+                  {notificationCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-4 min-w-[1rem] p-0 flex items-center justify-center text-[10px]"
+                    >
+                      {notificationCount}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:max-w-md p-0 pt-12">
+                <NotificationsPanel />
+              </SheetContent>
+            </Sheet>
+            
             <Button 
               variant="outline" 
               size="sm"
@@ -178,6 +232,16 @@ const Index = () => {
             >
               <Share2 className="h-4 w-4" />
               <span className="hidden sm:inline">Share Location</span>
+            </Button>
+
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-9 flex items-center gap-1 hidden sm:flex"
+              onClick={openShareMapDialog}
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>Share Map View</span>
             </Button>
           </div>
         </div>
@@ -218,6 +282,16 @@ const Index = () => {
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
+
+        {/* Mobile share map button - only visible on small screens */}
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute top-4 right-4 z-10 rounded-full bg-white dark:bg-gray-800 shadow-md sm:hidden"
+          onClick={openShareMapDialog}
+        >
+          <ExternalLink className="h-5 w-5" />
+        </Button>
       </div>
       
       {/* Welcome overlay for first-time users */}
@@ -239,6 +313,13 @@ const Index = () => {
       
       {/* Saved animals panel */}
       <SavedAnimalsPanel open={showSavedAnimals} onClose={() => setShowSavedAnimals(false)} />
+      
+      {/* Map Share Dialog */}
+      <MapShareDialog
+        open={mapShareOpen}
+        onOpenChange={setMapShareOpen}
+        currentView={currentMapView as {center: [number, number], zoom: number, pitch: number, bearing: number}}
+      />
       
       <ActionSidebar />
     </div>
