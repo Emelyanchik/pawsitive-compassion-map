@@ -576,6 +576,18 @@ const MapComponent: React.FC = () => {
     }
   };
 
+  const toggleClusterView = () => {
+    setUseClusterView(prev => !prev);
+    
+    // Show a toast message to inform the user
+    toast({
+      title: useClusterView ? "Cluster View Disabled" : "Cluster View Enabled",
+      description: useClusterView 
+        ? "Showing individual animal markers." 
+        : "Showing clusters of nearby animals.",
+    });
+  };
+
   useEffect(() => {
     const storedToken = localStorage.getItem('mapbox_token');
     if (storedToken) {
