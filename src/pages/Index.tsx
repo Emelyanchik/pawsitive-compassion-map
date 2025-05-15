@@ -5,9 +5,10 @@ import AnimalListView from '@/components/AnimalListView';
 import Header from '@/components/Header';
 import ActionSidebar from '@/components/ActionSidebar';
 import StatusFilterCards from '@/components/StatusFilterCards';
-import { Moon, Sun, Map, List, Search, Share2, Bookmark, AlertCircle, Bell, ExternalLink, SlidersHorizontal } from 'lucide-react';
+import { Moon, Sun, Map, List, Search, Share2, Bookmark, AlertCircle, Bell, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Input } from '@/components/ui/input';
 import { useMap } from '@/contexts/MapContext';
 import QuickStatsBanner from '@/components/QuickStatsBanner';
 import SavedAnimalsPanel from '@/components/SavedAnimalsPanel';
@@ -18,13 +19,6 @@ import MapShareDialog from '@/components/MapShareDialog';
 import NotificationsPanel from '@/components/NotificationsPanel';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import MapSearchSuggestions from '@/components/MapSearchSuggestions';
-import MapFilterPopup from '@/components/MapFilterPopup';
-import FeedbackDialog from '@/components/FeedbackDialog';
-import WelcomeTour from '@/components/WelcomeTour';
-import AnimalHeatmapToggle from '@/components/AnimalHeatmapToggle';
-import DirectionsPanel from '@/components/DirectionsPanel';
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -35,12 +29,7 @@ const Index = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [mapShareOpen, setMapShareOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
-  const [showFilterPopover, setShowFilterPopover] = useState(false);
-  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
-  const [showWelcomeTour, setShowWelcomeTour] = useState(false);
-  const [activeHeatmap, setActiveHeatmap] = useState<string | null>(null);
-  const [showDirections, setShowDirections] = useState(false);
-  const { animals, userLocation, mapRotation, mapPitch, filter, statusFilter, distanceFilter, selectedAnimal } = useMap();
+  const { animals, userLocation, mapRotation, mapPitch } = useMap();
   const { toast } = useToast();
 
   // Mock current map view for sharing
@@ -50,18 +39,6 @@ const Index = () => {
     pitch: mapPitch,
     bearing: mapRotation
   });
-
-  // Check if user is a first-time visitor
-  useEffect(() => {
-    const isFirstVisit = !localStorage.getItem('petmap-tour-completed');
-    if (isFirstVisit) {
-      // Wait a moment before showing the tour to let the UI load first
-      const timer = setTimeout(() => {
-        setShowWelcomeTour(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   // Update current map view when the map changes
   useEffect(() => {
@@ -120,13 +97,14 @@ const Index = () => {
     setWelcomeVisible(false);
   };
 
-  const handleLocationSelect = (coordinates: [number, number], name: string) => {
-    // We would typically pass this to map component
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real implementation, this would connect to a geocoding API
     toast({
-      title: "Location Selected",
-      description: `Going to ${name}`,
+      title: "Search Feature",
+      description: `Searching for: ${searchQuery}`,
     });
-    // This would be implemented in the Map component to fly to the location
+    // Keep the search query for potential future implementation
   };
 
   const shareLocation = async () => {
@@ -171,42 +149,6 @@ const Index = () => {
   const openShareMapDialog = () => {
     setMapShareOpen(true);
   };
-  
-  const getActiveFilterCount = () => {
-    return [
-      filter !== 'all' ? 1 : 0,
-      statusFilter ? 1 : 0,
-      distanceFilter > 0 ? 1 : 0
-    ].reduce((a, b) => a + b, 0);
-  };
-
-  const handleToggleHeatmap = (type: string | null) => {
-    setActiveHeatmap(type);
-    
-    if (type) {
-      toast({
-        title: "Heatmap Enabled",
-        description: `Showing ${type === 'all' ? 'all animal' : type} density on the map.`,
-      });
-    }
-  };
-
-  const handleOpenDirections = () => {
-    if (!selectedAnimal && !userLocation) {
-      toast({
-        title: "No Location Available",
-        description: "Please select an animal or enable your location to use directions.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setShowDirections(true);
-  };
-
-  const handleShowFeedback = () => {
-    setShowFeedbackDialog(true);
-  };
 
   // Calculate quick stats
   const needsHelpCount = animals.filter(a => a.status === 'needs_help').length;
@@ -225,55 +167,28 @@ const Index = () => {
       <div className="pt-14 h-full relative flex flex-col">
         {/* Search bar and quick actions */}
         <div className="z-20 bg-white dark:bg-gray-800 shadow-sm p-2 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex-1 min-w-[200px] relative">
-            <MapSearchSuggestions onSelectLocation={handleLocationSelect} />
-          </div>
+          <form onSubmit={handleSearch} className="flex-1 flex items-center min-w-[200px]">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search locations..."
+                className="pl-9 h-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Button type="submit" size="sm" className="ml-2 h-9">
+              Search
+            </Button>
+          </form>
           
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
             {userLocation && (
               <div className="mr-2">
                 <WeatherSummaryWidget onClick={openWeatherPanel} />
               </div>
             )}
-            
-            <AnimalHeatmapToggle 
-              onToggleHeatmap={handleToggleHeatmap} 
-              activeHeatmap={activeHeatmap}
-            />
-            
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 flex items-center gap-1"
-              onClick={handleOpenDirections}
-            >
-              <Map className="h-4 w-4" />
-              <span className="hidden sm:inline">Directions</span>
-            </Button>
-            
-            <Popover open={showFilterPopover} onOpenChange={setShowFilterPopover}>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="h-9 flex items-center gap-1 relative"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  <span className="hidden sm:inline">Filters</span>
-                  {getActiveFilterCount() > 0 && (
-                    <Badge 
-                      variant="secondary" 
-                      className="ml-1 h-5 min-w-[1.25rem] px-1 flex items-center justify-center text-xs"
-                    >
-                      {getActiveFilterCount()}
-                    </Badge>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-80 p-0">
-                <MapFilterPopup onClose={() => setShowFilterPopover(false)} />
-              </PopoverContent>
-            </Popover>
             
             <Sheet open={showNotifications} onOpenChange={setShowNotifications}>
               <SheetTrigger asChild>
@@ -367,17 +282,6 @@ const Index = () => {
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
-        
-        {/* Feedback button */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="absolute bottom-4 right-4 z-10 bg-white dark:bg-gray-800 shadow-md"
-          onClick={handleShowFeedback}
-        >
-          <AlertCircle className="h-4 w-4 mr-2" />
-          Feedback
-        </Button>
 
         {/* Mobile share map button - only visible on small screens */}
         <Button
@@ -416,24 +320,6 @@ const Index = () => {
         onOpenChange={setMapShareOpen}
         currentView={currentMapView as {center: [number, number], zoom: number, pitch: number, bearing: number}}
       />
-      
-      {/* New components */}
-      <FeedbackDialog
-        open={showFeedbackDialog}
-        onOpenChange={setShowFeedbackDialog}
-      />
-      
-      {showWelcomeTour && <WelcomeTour onComplete={() => setShowWelcomeTour(false)} />}
-      
-      {/* Directions Panel as a Drawer */}
-      <Sheet open={showDirections} onOpenChange={setShowDirections}>
-        <SheetContent side="right" className="w-full sm:max-w-md p-0 pt-12">
-          <DirectionsPanel 
-            onClose={() => setShowDirections(false)} 
-            animalLocation={selectedAnimal ? [selectedAnimal.longitude, selectedAnimal.latitude] : undefined}
-          />
-        </SheetContent>
-      </Sheet>
       
       <ActionSidebar />
     </div>
