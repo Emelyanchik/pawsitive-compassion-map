@@ -5,10 +5,9 @@ import AnimalListView from '@/components/AnimalListView';
 import Header from '@/components/Header';
 import ActionSidebar from '@/components/ActionSidebar';
 import StatusFilterCards from '@/components/StatusFilterCards';
-import { Moon, Sun, Map, List, Search, Share2, Bookmark, AlertCircle, Bell, ExternalLink } from 'lucide-react';
+import { Moon, Sun, Map, List, Search, Share2, Bookmark, AlertCircle, Bell, ExternalLink, SliderHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Input } from '@/components/ui/input';
 import { useMap } from '@/contexts/MapContext';
 import QuickStatsBanner from '@/components/QuickStatsBanner';
 import SavedAnimalsPanel from '@/components/SavedAnimalsPanel';
@@ -19,6 +18,9 @@ import MapShareDialog from '@/components/MapShareDialog';
 import NotificationsPanel from '@/components/NotificationsPanel';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import MapSearchSuggestions from '@/components/MapSearchSuggestions';
+import MapFilterPopup from '@/components/MapFilterPopup';
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -29,7 +31,8 @@ const Index = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [mapShareOpen, setMapShareOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
-  const { animals, userLocation, mapRotation, mapPitch } = useMap();
+  const [showFilterPopover, setShowFilterPopover] = useState(false);
+  const { animals, userLocation, mapRotation, mapPitch, filter, statusFilter, distanceFilter } = useMap();
   const { toast } = useToast();
 
   // Mock current map view for sharing
@@ -97,14 +100,13 @@ const Index = () => {
     setWelcomeVisible(false);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real implementation, this would connect to a geocoding API
+  const handleLocationSelect = (coordinates: [number, number], name: string) => {
+    // We would typically pass this to map component
     toast({
-      title: "Search Feature",
-      description: `Searching for: ${searchQuery}`,
+      title: "Location Selected",
+      description: `Going to ${name}`,
     });
-    // Keep the search query for potential future implementation
+    // This would be implemented in the Map component to fly to the location
   };
 
   const shareLocation = async () => {
@@ -149,6 +151,14 @@ const Index = () => {
   const openShareMapDialog = () => {
     setMapShareOpen(true);
   };
+  
+  const getActiveFilterCount = () => {
+    return [
+      filter !== 'all' ? 1 : 0,
+      statusFilter ? 1 : 0,
+      distanceFilter > 0 ? 1 : 0
+    ].reduce((a, b) => a + b, 0);
+  };
 
   // Calculate quick stats
   const needsHelpCount = animals.filter(a => a.status === 'needs_help').length;
@@ -167,21 +177,9 @@ const Index = () => {
       <div className="pt-14 h-full relative flex flex-col">
         {/* Search bar and quick actions */}
         <div className="z-20 bg-white dark:bg-gray-800 shadow-sm p-2 flex flex-wrap items-center justify-between gap-2">
-          <form onSubmit={handleSearch} className="flex-1 flex items-center min-w-[200px]">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search locations..."
-                className="pl-9 h-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Button type="submit" size="sm" className="ml-2 h-9">
-              Search
-            </Button>
-          </form>
+          <div className="flex-1 min-w-[200px] relative">
+            <MapSearchSuggestions onSelectLocation={handleLocationSelect} />
+          </div>
           
           <div className="flex items-center gap-2">
             {userLocation && (
@@ -189,6 +187,30 @@ const Index = () => {
                 <WeatherSummaryWidget onClick={openWeatherPanel} />
               </div>
             )}
+            
+            <Popover open={showFilterPopover} onOpenChange={setShowFilterPopover}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-9 flex items-center gap-1 relative"
+                >
+                  <SliderHorizontal className="h-4 w-4" />
+                  <span className="hidden sm:inline">Filters</span>
+                  {getActiveFilterCount() > 0 && (
+                    <Badge 
+                      variant="secondary" 
+                      className="ml-1 h-5 min-w-[1.25rem] px-1 flex items-center justify-center text-xs"
+                    >
+                      {getActiveFilterCount()}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80 p-0">
+                <MapFilterPopup onClose={() => setShowFilterPopover(false)} />
+              </PopoverContent>
+            </Popover>
             
             <Sheet open={showNotifications} onOpenChange={setShowNotifications}>
               <SheetTrigger asChild>
