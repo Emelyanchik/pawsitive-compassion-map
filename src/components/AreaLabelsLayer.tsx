@@ -151,8 +151,8 @@ const AreaLabelsLayer: React.FC<AreaLabelsLayerProps> = ({ map }) => {
       // Set up interactions
       let hoveredStateId: string | null = null;
 
-      // Fix TypeScript errors by using proper function type for event handlers
-      map.on('mousemove', 'area-labels-fill', (e: mapboxgl.MapMouseEvent & mapboxgl.EventData) => {
+      // Fix TypeScript errors by using proper typing for event handlers
+      map.on('mousemove', 'area-labels-fill', (e) => {
         if (e.features && e.features.length > 0) {
           if (hoveredStateId !== null) {
             map.setFeatureState(
