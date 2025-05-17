@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMap } from '../contexts/MapContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { Compass, MapPin, Plus, Minus, Dog, Cat, Rotate3d, Ruler, Maximize2, Minimize2, Navigation, MousePointer, Target, Layers } from 'lucide-react';
+import { Compass, MapPin, Plus, Minus, Dog, Cat, Rotate3d, Ruler, Maximize2, Minimize2, Navigation, MousePointer, Target, Layers, CloudRain } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { AddAnimalForm } from './AddAnimalForm';
 import AnimalDetailsDialog from './AnimalDetailsDialog';
@@ -13,6 +13,8 @@ import AreaLabeling from './AreaLabeling';
 import AreaLabelsLayer from './AreaLabelsLayer';
 import MapToolsPopup from './MapToolsPopup';
 import MapClusterLayer from './MapClusterLayer';
+import MapWeatherOverlay from './MapWeatherOverlay';
+import WeatherOverlayControl from './WeatherOverlayControl';
 
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -46,6 +48,8 @@ const MapComponent: React.FC = () => {
   const measureSourceRef = useRef<mapboxgl.GeoJSONSource | null>(null);
   const watchPositionRef = useRef<number | null>(null);
   const [useClusterView, setUseClusterView] = useState(false);
+  const [weatherOverlayType, setWeatherOverlayType] = useState<'temperature' | 'precipitation' | 'clouds' | null>(null);
+  const [showWeatherControls, setShowWeatherControls] = useState(false);
 
   const setupMap = () => {
     if (!mapContainer.current || !mapboxToken) return;
@@ -645,6 +649,9 @@ const MapComponent: React.FC = () => {
       <AreaLabeling map={map.current} />
       <AreaLabelsLayer map={map.current} />
       
+      {/* Weather Overlay */}
+      <MapWeatherOverlay map={map.current} weatherType={weatherOverlayType} />
+      
       {/* Add cluster layer when needed */}
       {useClusterView && <MapClusterLayer map={map.current} />}
       
@@ -712,6 +719,16 @@ const MapComponent: React.FC = () => {
         >
           <Layers className="w-5 h-5 text-gray-700" />
         </Button>
+        {/* New Weather Overlay Button */}
+        <Button 
+          variant="secondary" 
+          size="icon" 
+          className={`rounded-full bg-white shadow-md hover:bg-gray-100 ${weatherOverlayType || showWeatherControls ? 'bg-blue-100' : ''}`}
+          onClick={() => setShowWeatherControls(!showWeatherControls)}
+          title="Weather Overlay"
+        >
+          <CloudRain className="w-5 h-5 text-gray-700" />
+        </Button>
         <Button 
           variant="secondary" 
           size="icon" 
@@ -721,6 +738,16 @@ const MapComponent: React.FC = () => {
           <Target className="w-5 h-5 text-gray-700" />
         </Button>
       </div>
+      
+      {/* Weather Controls */}
+      {showWeatherControls && (
+        <div className="absolute left-20 bottom-56 animate-fade-in">
+          <WeatherOverlayControl
+            activeWeatherType={weatherOverlayType}
+            onWeatherTypeChange={setWeatherOverlayType}
+          />
+        </div>
+      )}
       
       {/* Map Tools Popup */}
       {isToolsPopupOpen && (
