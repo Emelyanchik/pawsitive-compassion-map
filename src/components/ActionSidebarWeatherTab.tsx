@@ -1,6 +1,7 @@
 
 import React from 'react';
 import DetailedWeatherPanel from './DetailedWeatherPanel';
+import WeatherBasedRecommendations from './WeatherBasedRecommendations';
 import { Button } from './ui/button';
 import { CloudRain, MapPin, Target, Clock, Info, Calendar } from 'lucide-react';
 import { useMap } from '@/contexts/MapContext';
@@ -68,7 +69,7 @@ const ActionSidebarWeatherTab: React.FC<ActionSidebarWeatherTabProps> = ({ onClo
       </div>
       
       <Tabs defaultValue="current" className="w-full mt-2">
-        <TabsList className="w-full grid grid-cols-3">
+        <TabsList className="w-full grid grid-cols-4">
           <TabsTrigger value="current" onClick={() => setTimeFrame('current')}>
             <Clock className="h-4 w-4 mr-1" />
             Current
@@ -80,6 +81,10 @@ const ActionSidebarWeatherTab: React.FC<ActionSidebarWeatherTabProps> = ({ onClo
           <TabsTrigger value="daily" onClick={() => setTimeFrame('daily')}>
             <Calendar className="h-4 w-4 mr-1" />
             Daily
+          </TabsTrigger>
+          <TabsTrigger value="recommendations">
+            <Info className="h-4 w-4 mr-1" />
+            Tips
           </TabsTrigger>
         </TabsList>
         
@@ -115,6 +120,10 @@ const ActionSidebarWeatherTab: React.FC<ActionSidebarWeatherTabProps> = ({ onClo
             location={selectedLocation} 
             mode="daily"
           />
+        </TabsContent>
+        
+        <TabsContent value="recommendations" className="space-y-4">
+          <WeatherBasedRecommendations />
         </TabsContent>
       </Tabs>
       

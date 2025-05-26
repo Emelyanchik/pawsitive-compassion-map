@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import MapComponent from '@/components/MapComponent';
 import AnimalListView from '@/components/AnimalListView';
@@ -25,6 +24,7 @@ import FeedbackDialog from '@/components/FeedbackDialog';
 import WelcomeTour from '@/components/WelcomeTour';
 import AnimalHeatmapToggle from '@/components/AnimalHeatmapToggle';
 import DirectionsPanel from '@/components/DirectionsPanel';
+import EmergencyAlertsBanner from '@/components/EmergencyAlertsBanner';
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -221,6 +221,7 @@ const Index = () => {
       '--petmap-blue': '#0EA5E9'
     } as React.CSSProperties}>
       <TopNotificationBanner />
+      <EmergencyAlertsBanner />
       <Header />
       <div className="pt-14 h-full relative flex flex-col">
         {/* Search bar and quick actions */}

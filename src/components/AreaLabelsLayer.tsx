@@ -151,8 +151,8 @@ const AreaLabelsLayer: React.FC<AreaLabelsLayerProps> = ({ map }) => {
       // Set up interactions
       let hoveredStateId: string | null = null;
 
-      // Fix TypeScript errors by using proper typing for event handlers
-      map.on('mousemove', 'area-labels-fill', (e) => {
+      // Fix TypeScript errors by using proper event handler functions
+      const handleMouseMove = (e: mapboxgl.MapMouseEvent) => {
         if (e.features && e.features.length > 0) {
           if (hoveredStateId !== null) {
             map.setFeatureState(
@@ -169,9 +169,9 @@ const AreaLabelsLayer: React.FC<AreaLabelsLayerProps> = ({ map }) => {
           }
           map.getCanvas().style.cursor = 'pointer';
         }
-      });
+      };
 
-      map.on('mouseleave', 'area-labels-fill', () => {
+      const handleMouseLeave = () => {
         if (hoveredStateId !== null) {
           map.setFeatureState(
             { source: 'area-labels', id: hoveredStateId },
@@ -180,7 +180,10 @@ const AreaLabelsLayer: React.FC<AreaLabelsLayerProps> = ({ map }) => {
         }
         hoveredStateId = null;
         map.getCanvas().style.cursor = '';
-      });
+      };
+
+      map.on('mousemove', 'area-labels-fill', handleMouseMove);
+      map.on('mouseleave', 'area-labels-fill', handleMouseLeave);
     };
 
     // Check if style is loaded before adding sources and layers
@@ -195,7 +198,7 @@ const AreaLabelsLayer: React.FC<AreaLabelsLayerProps> = ({ map }) => {
     return () => {
       if (!map) return;
       
-      // Remove event listeners
+      // Remove event listeners - need to reference the same functions
       map.off('mousemove', 'area-labels-fill');
       map.off('mouseleave', 'area-labels-fill');
       

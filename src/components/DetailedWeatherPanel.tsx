@@ -1,251 +1,246 @@
-
 import React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Thermometer, CloudRain, Cloud, Wind, Navigation, Sun, Droplet, Compass, 
-  Umbrella, UmbrellaClosed, Clock, AlertTriangle
-} from 'lucide-react';
-import { useMap } from '@/contexts/MapContext';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { Cloud, CloudRain, Sun, Wind, Thermometer, Droplets, Eye, Gauge, umbrella } from 'lucide-react';
+
+interface WeatherData {
+  temperature: number;
+  humidity: number;
+  windSpeed: number;
+  windDirection: string;
+  visibility: number;
+  pressure: number;
+  uvIndex: number;
+  condition: string;
+  description: string;
+  precipitation: number;
+  cloudCover: number;
+}
+
+interface HourlyWeatherData {
+  time: string;
+  temperature: number;
+  condition: string;
+  precipitation: number;
+}
+
+interface DailyWeatherData {
+  date: string;
+  high: number;
+  low: number;
+  condition: string;
+  precipitation: number;
+}
 
 interface DetailedWeatherPanelProps {
-  location?: [number, number]; // Optional location, defaults to user location
+  location?: [number, number];
   mode?: 'current' | 'hourly' | 'daily';
   day?: string;
 }
 
+// Mock weather data - in a real app, this would come from an API
+const mockCurrentWeather: WeatherData = {
+  temperature: 22,
+  humidity: 65,
+  windSpeed: 12,
+  windDirection: 'NW',
+  visibility: 10,
+  pressure: 1013,
+  uvIndex: 6,
+  condition: 'partly_cloudy',
+  description: 'Partly cloudy with light winds',
+  precipitation: 0,
+  cloudCover: 40
+};
+
+const mockHourlyWeather: HourlyWeatherData[] = [
+  { time: '12:00', temperature: 22, condition: 'sunny', precipitation: 0 },
+  { time: '13:00', temperature: 24, condition: 'partly_cloudy', precipitation: 0 },
+  { time: '14:00', temperature: 25, condition: 'partly_cloudy', precipitation: 10 },
+  { time: '15:00', temperature: 23, condition: 'cloudy', precipitation: 20 },
+  { time: '16:00', temperature: 21, condition: 'rainy', precipitation: 80 },
+  { time: '17:00', temperature: 19, condition: 'rainy', precipitation: 90 },
+];
+
+const mockDailyWeather: DailyWeatherData[] = [
+  { date: 'Today', high: 25, low: 18, condition: 'partly_cloudy', precipitation: 20 },
+  { date: 'Tomorrow', high: 23, low: 16, condition: 'rainy', precipitation: 80 },
+  { date: 'Wednesday', high: 27, low: 20, condition: 'sunny', precipitation: 0 },
+  { date: 'Thursday', high: 26, low: 19, condition: 'partly_cloudy', precipitation: 10 },
+  { date: 'Friday', high: 24, low: 17, condition: 'cloudy', precipitation: 30 },
+];
+
 const DetailedWeatherPanel: React.FC<DetailedWeatherPanelProps> = ({ 
-  location,
-  mode = 'current', 
-  day = 'today'
+  location, 
+  mode = 'current',
+  day = 'today' 
 }) => {
-  const { userLocation } = useMap();
-  const weatherLocation = location || userLocation;
-  
-  // Mock weather data - in a real app this would come from a weather API
-  const weatherData = {
-    location: weatherLocation ? `${weatherLocation[1].toFixed(4)}, ${weatherLocation[0].toFixed(4)}` : 'Unknown',
-    temperature: 22,
-    feelsLike: 24,
-    humidity: 65,
-    windSpeed: 12,
-    windDirection: 'NE',
-    precipitation: 10,
-    cloudCover: 40,
-    visibility: 8,
-    pressure: 1015,
-    uvIndex: 5,
-    sunrise: '6:23 AM',
-    sunset: '8:17 PM',
-    hourlyForecast: [
-      { time: '9:00 AM', temp: 19, condition: 'Cloudy', precipitation: 10 },
-      { time: '10:00 AM', temp: 21, condition: 'Partly Cloudy', precipitation: 5 },
-      { time: '11:00 AM', temp: 22, condition: 'Sunny', precipitation: 0 },
-      { time: '12:00 PM', temp: 24, condition: 'Sunny', precipitation: 0 },
-      { time: '1:00 PM', temp: 25, condition: 'Sunny', precipitation: 0 },
-      { time: '2:00 PM', temp: 26, condition: 'Partly Cloudy', precipitation: 0 },
-      { time: '3:00 PM', temp: 25, condition: 'Partly Cloudy', precipitation: 5 },
-      { time: '4:00 PM', temp: 24, condition: 'Cloudy', precipitation: 15 },
-      { time: '5:00 PM', temp: 23, condition: 'Rain', precipitation: 50 },
-      { time: '6:00 PM', temp: 21, condition: 'Rain', precipitation: 60 },
-      { time: '7:00 PM', temp: 20, condition: 'Cloudy', precipitation: 30 },
-      { time: '8:00 PM', temp: 19, condition: 'Cloudy', precipitation: 20 }
-    ],
-    alerts: [
-      { type: 'Rain', description: 'Heavy rain possible in the afternoon', severity: 'moderate' }
-    ],
-    forecast: [
-      { day: 'Today', high: 24, low: 19, condition: 'Partly Cloudy', precipitation: 40 },
-      { day: 'Tomorrow', high: 26, low: 20, condition: 'Sunny', precipitation: 0 },
-      { day: 'Wednesday', high: 23, low: 18, condition: 'Rain', precipitation: 80 },
-      { day: 'Thursday', high: 21, low: 17, condition: 'Cloudy', precipitation: 20 },
-      { day: 'Friday', high: 22, low: 18, condition: 'Partly Cloudy', precipitation: 10 },
-    ]
-  };
-  
-  const getConditionIcon = (condition: string, size = 5) => {
-    switch(condition.toLowerCase()) {
+  const getWeatherIcon = (condition: string) => {
+    switch (condition) {
       case 'sunny':
-        return <Sun className={`h-${size} w-${size} text-yellow-500`} />;
-      case 'rain':
-        return <CloudRain className={`h-${size} w-${size} text-blue-500`} />;
+        return <Sun className="h-5 w-5 text-yellow-500" />;
+      case 'partly_cloudy':
+        return <Cloud className="h-5 w-5 text-gray-500" />;
       case 'cloudy':
-        return <Cloud className={`h-${size} w-${size} text-gray-500`} />;
-      case 'partly cloudy':
+        return <Cloud className="h-5 w-5 text-gray-600" />;
+      case 'rainy':
+        return <CloudRain className="h-5 w-5 text-blue-500" />;
       default:
-        return <Cloud className={`h-${size} w-${size} text-gray-400`} />;
+        return <Sun className="h-5 w-5 text-yellow-500" />;
     }
-  };
-  
-  const formatDay = (day: string) => {
-    // Only show first 3 letters except for "Today" and "Tomorrow"
-    if (day === 'Today' || day === 'Tomorrow') return day;
-    return day.substring(0, 3);
   };
 
-  const getPrecipitationIcon = (chance: number) => {
-    if (chance > 0) {
-      return <Umbrella className={`h-4 w-4 ${chance > 50 ? 'text-blue-600' : 'text-blue-400'}`} />;
-    }
-    return <UmbrellaClosed className="h-4 w-4 text-gray-400" />;
+  const getUVIndexColor = (uvIndex: number) => {
+    if (uvIndex <= 2) return 'bg-green-500';
+    if (uvIndex <= 5) return 'bg-yellow-500';
+    if (uvIndex <= 7) return 'bg-orange-500';
+    if (uvIndex <= 10) return 'bg-red-500';
+    return 'bg-purple-500';
   };
-  
-  if (!weatherLocation) {
+
+  const getUVIndexLabel = (uvIndex: number) => {
+    if (uvIndex <= 2) return 'Low';
+    if (uvIndex <= 5) return 'Moderate';
+    if (uvIndex <= 7) return 'High';
+    if (uvIndex <= 10) return 'Very High';
+    return 'Extreme';
+  };
+
+  if (!location) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Weather Information</CardTitle>
-          <CardDescription>Location unavailable</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Please enable location services or select a location on the map to see weather information.</p>
+      <Card>
+        <CardContent className="flex items-center justify-center h-32">
+          <p className="text-gray-500">Select a location to view weather information</p>
         </CardContent>
       </Card>
     );
   }
-  
-  const renderCurrentWeather = () => (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Current Weather</CardTitle>
-        <CardDescription>Coordinates: {weatherData.location}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {weatherData.alerts && weatherData.alerts.length > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-md p-2 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <div>
-              <p className="text-sm font-medium text-amber-800">{weatherData.alerts[0].type} Alert</p>
-              <p className="text-xs text-amber-700">{weatherData.alerts[0].description}</p>
+
+  if (mode === 'current') {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {getWeatherIcon(mockCurrentWeather.condition)}
+              Current Weather
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-3xl font-bold">{mockCurrentWeather.temperature}°C</span>
+              <Badge variant="outline">{mockCurrentWeather.description}</Badge>
             </div>
-          </div>
-        )}
-        
-        <div className="flex flex-wrap gap-4 justify-between">
-          <div className="flex items-center gap-2">
-            <Thermometer className="h-5 w-5 text-red-500" />
-            <div>
-              <div className="font-bold text-2xl">{weatherData.temperature}°C</div>
-              <div className="text-xs text-muted-foreground">Feels like {weatherData.feelsLike}°C</div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            <div className="flex items-center gap-1">
-              <Wind className="h-4 w-4 text-blue-500" />
-              <span className="text-sm">{weatherData.windSpeed} km/h</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Compass className="h-4 w-4 text-blue-500" />
-              <span className="text-sm">{weatherData.windDirection}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Droplet className="h-4 w-4 text-blue-500" />
-              <span className="text-sm">{weatherData.humidity}%</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Cloud className="h-4 w-4 text-blue-500" />
-              <span className="text-sm">{weatherData.cloudCover}%</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-between text-xs text-muted-foreground mt-4 pt-2 border-t">
-          <div>Sunrise: {weatherData.sunrise}</div>
-          <div>Sunset: {weatherData.sunset}</div>
-        </div>
-        
-        <div className="pt-2">
-          <h3 className="text-sm font-medium mb-2">Today's Forecast</h3>
-          <div className="grid grid-cols-4 gap-2">
-            {weatherData.hourlyForecast.slice(0,4).map((hour, index) => (
-              <div key={index} className="flex flex-col items-center bg-muted/50 rounded-md p-2">
-                <span className="text-xs font-medium">{hour.time}</span>
-                <div className="my-1">{getConditionIcon(hour.condition, 4)}</div>
-                <span className="font-medium text-sm">{hour.temp}°</span>
-                <div className="mt-1">
-                  {getPrecipitationIcon(hour.precipitation)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="text-xs text-muted-foreground">
-        Weather data is simulated for demonstration purposes.
-      </CardFooter>
-    </Card>
-  );
-  
-  const renderHourlyForecast = () => (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Hourly Forecast</CardTitle>
-        <CardDescription>For {day}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <div className="grid grid-flow-col auto-cols-max gap-3 pb-2">
-            {weatherData.hourlyForecast.map((hour, index) => (
-              <div key={index} className="flex flex-col items-center bg-muted/30 rounded-md p-2 min-w-[70px]">
-                <span className="text-xs font-medium">{hour.time}</span>
-                <div className="my-1">{getConditionIcon(hour.condition, 5)}</div>
-                <span className="font-medium text-lg">{hour.temp}°</span>
-                <div className="mt-1 flex items-center gap-1">
-                  {getPrecipitationIcon(hour.precipitation)}
-                  <span className="text-xs">{hour.precipitation}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="text-xs text-muted-foreground">
-        Scroll horizontally to see more hours.
-      </CardFooter>
-    </Card>
-  );
-  
-  const renderDailyForecast = () => (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>5-Day Forecast</CardTitle>
-        <CardDescription>Extended outlook</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          {weatherData.forecast.map((day, index) => (
-            <div key={index} className="flex items-center justify-between p-2 bg-muted/30 rounded-md">
-              <div className="flex items-center gap-3">
-                <div className="w-8">{getConditionIcon(day.condition, 5)}</div>
-                <span className="font-medium w-24">{formatDay(day.day)}</span>
+            
+            <Separator />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-2">
+                <Droplets className="h-4 w-4 text-blue-500" />
+                <span className="text-sm">Humidity: {mockCurrentWeather.humidity}%</span>
               </div>
               <div className="flex items-center gap-2">
-                {getPrecipitationIcon(day.precipitation)}
-                <span className="text-xs w-6">{day.precipitation}%</span>
+                <Wind className="h-4 w-4 text-gray-500" />
+                <span className="text-sm">Wind: {mockCurrentWeather.windSpeed} km/h {mockCurrentWeather.windDirection}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-medium">{day.high}°</span>
-                <span className="text-muted-foreground">{day.low}°</span>
+                <Eye className="h-4 w-4 text-purple-500" />
+                <span className="text-sm">Visibility: {mockCurrentWeather.visibility} km</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Gauge className="h-4 w-4 text-green-500" />
+                <span className="text-sm">Pressure: {mockCurrentWeather.pressure} hPa</span>
               </div>
             </div>
-          ))}
-        </div>
-      </CardContent>
-      <CardFooter className="text-xs text-muted-foreground">
-        Weather data is simulated for demonstration purposes.
-      </CardFooter>
-    </Card>
-  );
-  
-  switch (mode) {
-    case 'hourly':
-      return renderHourlyForecast();
-    case 'daily':
-      return renderDailyForecast();
-    default:
-      return renderCurrentWeather();
+            
+            <Separator />
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm">UV Index</span>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${getUVIndexColor(mockCurrentWeather.uvIndex)}`}></div>
+                <span className="text-sm font-medium">{mockCurrentWeather.uvIndex} - {getUVIndexLabel(mockCurrentWeather.uvIndex)}</span>
+              </div>
+            </div>
+            
+            {mockCurrentWeather.precipitation > 0 && (
+              <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-950 rounded">
+                <umbrella className="h-4 w-4 text-blue-600" />
+                <span className="text-sm text-blue-800 dark:text-blue-300">
+                  {mockCurrentWeather.precipitation}% chance of rain
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
+
+  if (mode === 'hourly') {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Hourly Forecast - {day}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {mockHourlyWeather.map((hour, index) => (
+                <div key={index} className="flex items-center justify-between p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <span className="font-medium">{hour.time}</span>
+                  <div className="flex items-center gap-2">
+                    {getWeatherIcon(hour.condition)}
+                    <span>{hour.temperature}°C</span>
+                    {hour.precipitation > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {hour.precipitation}%
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (mode === 'daily') {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>5-Day Forecast</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {mockDailyWeather.map((day, index) => (
+                <div key={index} className="flex items-center justify-between p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <span className="font-medium">{day.date}</span>
+                  <div className="flex items-center gap-2">
+                    {getWeatherIcon(day.condition)}
+                    <span className="text-sm">
+                      {day.high}°/{day.low}°
+                    </span>
+                    {day.precipitation > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {day.precipitation}%
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default DetailedWeatherPanel;
