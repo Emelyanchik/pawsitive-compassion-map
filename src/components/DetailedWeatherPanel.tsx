@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
-import { Cloud, CloudRain, Sun, Wind, Thermometer, Droplets, Eye, Gauge, umbrella } from 'lucide-react';
+import { Cloud, CloudRain, Sun, Wind, Thermometer, Droplets, Eye, Gauge, Umbrella } from 'lucide-react';
 
 interface WeatherData {
   temperature: number;
@@ -166,7 +166,7 @@ const DetailedWeatherPanel: React.FC<DetailedWeatherPanelProps> = ({
             
             {mockCurrentWeather.precipitation > 0 && (
               <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-950 rounded">
-                <umbrella className="h-4 w-4 text-blue-600" />
+                <Umbrella className="h-4 w-4 text-blue-600" />
                 <span className="text-sm text-blue-800 dark:text-blue-300">
                   {mockCurrentWeather.precipitation}% chance of rain
                 </span>
