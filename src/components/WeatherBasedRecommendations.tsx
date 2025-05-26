@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
-import { CloudRain, Sun, Cloud, Wind, Thermometer, umbrella, Home, Heart, Droplets } from 'lucide-react';
+import { CloudRain, Sun, Cloud, Wind, Thermometer, Umbrella, Home, Heart, Droplets } from 'lucide-react';
 
 interface WeatherRecommendation {
   id: string;
@@ -106,7 +106,7 @@ const WeatherBasedRecommendations: React.FC = () => {
       case 'feeding': return <Droplets className="h-4 w-4" />;
       case 'exercise': return <Wind className="h-4 w-4" />;
       case 'health': return <Heart className="h-4 w-4" />;
-      case 'safety': return <umbrella className="h-4 w-4" />;
+      case 'safety': return <Umbrella className="h-4 w-4" />;
       default: return <Heart className="h-4 w-4" />;
     }
   };

@@ -198,10 +198,6 @@ const AreaLabelsLayer: React.FC<AreaLabelsLayerProps> = ({ map }) => {
     return () => {
       if (!map) return;
       
-      // Remove event listeners - need to reference the same functions
-      map.off('mousemove', 'area-labels-fill');
-      map.off('mouseleave', 'area-labels-fill');
-      
       // Remove layers and sources
       if (map.getLayer('area-labels-fill')) map.removeLayer('area-labels-fill');
       if (map.getLayer('area-labels-outline')) map.removeLayer('area-labels-outline');

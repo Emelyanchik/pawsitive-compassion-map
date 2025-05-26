@@ -75,12 +75,12 @@ const AnimalHealthTracker: React.FC = () => {
     }
   };
 
-  const getRecordTypeBadge = (type: string) => {
+  const getRecordTypeBadge = (type: string): "destructive" | "default" | "secondary" | "outline" | "success" | "warning" | "info" | "purple" => {
     const variants = {
-      checkup: 'default',
-      vaccination: 'secondary',
-      treatment: 'outline',
-      emergency: 'destructive'
+      checkup: 'default' as const,
+      vaccination: 'secondary' as const,
+      treatment: 'outline' as const,
+      emergency: 'destructive' as const
     };
     return variants[type as keyof typeof variants] || 'default';
   };
