@@ -23,7 +23,9 @@ import {
   Calendar,
   BarChart,
   FileText,
-  MessageSquare
+  MessageSquare,
+  TrendingUp,
+  Target
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -34,6 +36,9 @@ import TokenActivity from '@/components/TokenActivity';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { InstagramIntegration } from '@/components/InstagramIntegration';
 import { VolunteerShelterInfo } from '@/components/VolunteerShelterInfo';
+import { AchievementSystem } from '@/components/AchievementSystem';
+import { UserActivityAnalytics } from '@/components/UserActivityAnalytics';
+import { InteractiveAnimalCard } from '@/components/InteractiveAnimalCard';
 
 const ProfilePage = () => {
   const { userTokens, animals } = useMap();
@@ -54,6 +59,14 @@ const ProfilePage = () => {
     animalsSaved: 7,
     totalContributions: 24
   };
+
+  // Статистика для системы достижений
+  const userStats = {
+    animalsHelped: userProfile.animalsHelped,
+    daysActive: 15,
+    postsShared: 8,
+    volunteersConnected: 5
+  };
   
   const reportedAnimals = animals.filter(animal => animal.reportedBy === userProfile.username);
   
@@ -62,6 +75,15 @@ const ProfilePage = () => {
   const nextLevelThreshold = (userProfile.level + 1) * 100;
   const progress = ((userProfile.tokensEarned - currentLevelThreshold) / 
                    (nextLevelThreshold - currentLevelThreshold)) * 100;
+
+  // Конвертируем животных для InteractiveAnimalCard
+  const interactiveAnimals = reportedAnimals.map(animal => ({
+    ...animal,
+    urgency: 'medium' as const,
+    helpProgress: Math.floor(Math.random() * 80) + 10,
+    volunteersInvolved: Math.floor(Math.random() * 5) + 1,
+    estimatedCost: Math.floor(Math.random() * 500) + 100
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -200,10 +222,11 @@ const ProfilePage = () => {
           {/* Main Content */}
           <div className="md:col-span-2 space-y-6">
             <Tabs defaultValue="activity">
-              <TabsList className="grid grid-cols-5 mb-4">
+              <TabsList className="grid grid-cols-6 mb-4">
                 <TabsTrigger value="activity">Activity</TabsTrigger>
                 <TabsTrigger value="animals">My Animals</TabsTrigger>
-                <TabsTrigger value="badges">Badges</TabsTrigger>
+                <TabsTrigger value="achievements">Rewards</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 <TabsTrigger value="instagram">Instagram</TabsTrigger>
                 <TabsTrigger value="community">Community</TabsTrigger>
               </TabsList>
@@ -211,7 +234,10 @@ const ProfilePage = () => {
               <TabsContent value="activity" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Recent Activity</CardTitle>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5" />
+                      Recent Activity
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {reportedAnimals.length > 0 ? (
@@ -235,7 +261,7 @@ const ProfilePage = () => {
                               <Badge variant={
                                 animal.status === 'needs_help' ? 'destructive' :
                                 animal.status === 'being_helped' ? 'default' :
-                                animal.status === 'adopted' ? 'success' : 'outline'
+                                animal.status === 'adopted' ? 'default' : 'outline'
                               }>
                                 {animal.status.replace('_', ' ')}
                               </Badge>
@@ -263,41 +289,16 @@ const ProfilePage = () => {
                     <CardTitle className="text-lg">My Reported Animals</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {reportedAnimals.length > 0 ? (
+                    {interactiveAnimals.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {reportedAnimals.map((animal) => (
-                          <Card key={animal.id} className="overflow-hidden">
-                            <div className="h-32 bg-gray-200 relative">
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                {animal.type === 'cat' ? '🐱' : '🐶'}
-                              </div>
-                              <Badge 
-                                className="absolute top-2 right-2"
-                                variant={
-                                  animal.status === 'needs_help' ? 'destructive' :
-                                  animal.status === 'being_helped' ? 'default' :
-                                  animal.status === 'adopted' ? 'success' : 'outline'
-                                }
-                              >
-                                {animal.status.replace('_', ' ')}
-                              </Badge>
-                            </div>
-                            <CardContent className="pt-4">
-                              <h3 className="font-medium">{animal.name}</h3>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                Reported on {format(new Date(animal.reportedAt), 'MMM d, yyyy')}
-                              </p>
-                              <p className="text-sm line-clamp-2">{animal.description}</p>
-                              <div className="flex justify-between items-center mt-3">
-                                <Badge variant="outline">
-                                  {animal.type}
-                                </Badge>
-                                <Button size="sm" variant="ghost">
-                                  View Details
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
+                        {interactiveAnimals.map((animal) => (
+                          <InteractiveAnimalCard
+                            key={animal.id}
+                            animal={animal}
+                            onHelp={(id) => console.log('Help animal:', id)}
+                            onShare={(id) => console.log('Share animal:', id)}
+                            onContact={(id) => console.log('Contact about animal:', id)}
+                          />
                         ))}
                       </div>
                     ) : (
@@ -314,83 +315,26 @@ const ProfilePage = () => {
                 </Card>
               </TabsContent>
               
-              <TabsContent value="badges" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Achievement Badges</CardTitle>
-                    <CardDescription>
-                      Earn badges by reaching milestones and helping animals
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      <div className="flex flex-col items-center p-4 border rounded-lg">
-                        <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
-                          <Award className="h-8 w-8 text-green-600" />
-                        </div>
-                        <h3 className="font-medium text-center">First Rescue</h3>
-                        <p className="text-xs text-muted-foreground text-center mt-1">Report your first animal</p>
-                      </div>
-                      
-                      <div className="flex flex-col items-center p-4 border rounded-lg">
-                        <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                          <Heart className="h-8 w-8 text-blue-600" />
-                        </div>
-                        <h3 className="font-medium text-center">Helping Hand</h3>
-                        <p className="text-xs text-muted-foreground text-center mt-1">Help 5 animals in need</p>
-                      </div>
-                      
-                      <div className="flex flex-col items-center p-4 border rounded-lg opacity-50">
-                        <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                          <Shield className="h-8 w-8 text-gray-400" />
-                        </div>
-                        <h3 className="font-medium text-center">Guardian</h3>
-                        <p className="text-xs text-muted-foreground text-center mt-1">Help 25 animals</p>
-                      </div>
-                      
-                      <div className="flex flex-col items-center p-4 border rounded-lg opacity-50">
-                        <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                          <Coins className="h-8 w-8 text-gray-400" />
-                        </div>
-                        <h3 className="font-medium text-center">Token Master</h3>
-                        <p className="text-xs text-muted-foreground text-center mt-1">Earn 500 tokens</p>
-                      </div>
-                      
-                      <div className="flex flex-col items-center p-4 border rounded-lg opacity-50">
-                        <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                          <Bell className="h-8 w-8 text-gray-400" />
-                        </div>
-                        <h3 className="font-medium text-center">First Adopter</h3>
-                        <p className="text-xs text-muted-foreground text-center mt-1">Help an animal get adopted</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+              <TabsContent value="achievements" className="space-y-4">
+                <AchievementSystem userStats={userStats} />
+              </TabsContent>
+              
+              <TabsContent value="analytics" className="space-y-4">
+                <UserActivityAnalytics />
               </TabsContent>
               
               <TabsContent value="instagram" className="space-y-4">
-                <InstagramIntegration />
+                <InstagramIntegration animalData={
+                  reportedAnimals.length > 0 ? {
+                    name: reportedAnimals[0].name,
+                    type: reportedAnimals[0].type,
+                    location: reportedAnimals[0].location
+                  } : undefined
+                } />
               </TabsContent>
               
               <TabsContent value="community" className="space-y-4">
                 <VolunteerShelterInfo />
-              </TabsContent>
-              
-              <TabsContent value="settings" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Account Settings</CardTitle>
-                    <CardDescription>
-                      Manage your account preferences and notifications
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground mb-6">
-                      This section will allow you to update your profile information and preferences.
-                    </p>
-                    <Button variant="outline">Coming Soon</Button>
-                  </CardContent>
-                </Card>
               </TabsContent>
             </Tabs>
           </div>
