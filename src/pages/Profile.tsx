@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useMap } from '@/contexts/MapContext';
 import { 
@@ -33,6 +32,8 @@ import { format } from 'date-fns';
 import Header from '@/components/Header';
 import TokenActivity from '@/components/TokenActivity';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { InstagramIntegration } from '@/components/InstagramIntegration';
+import { VolunteerShelterInfo } from '@/components/VolunteerShelterInfo';
 
 const ProfilePage = () => {
   const { userTokens, animals } = useMap();
@@ -199,11 +200,12 @@ const ProfilePage = () => {
           {/* Main Content */}
           <div className="md:col-span-2 space-y-6">
             <Tabs defaultValue="activity">
-              <TabsList className="grid grid-cols-4 mb-4">
+              <TabsList className="grid grid-cols-5 mb-4">
                 <TabsTrigger value="activity">Activity</TabsTrigger>
                 <TabsTrigger value="animals">My Animals</TabsTrigger>
                 <TabsTrigger value="badges">Badges</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
+                <TabsTrigger value="instagram">Instagram</TabsTrigger>
+                <TabsTrigger value="community">Community</TabsTrigger>
               </TabsList>
               
               <TabsContent value="activity" className="space-y-4">
@@ -364,6 +366,14 @@ const ProfilePage = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+              
+              <TabsContent value="instagram" className="space-y-4">
+                <InstagramIntegration />
+              </TabsContent>
+              
+              <TabsContent value="community" className="space-y-4">
+                <VolunteerShelterInfo />
               </TabsContent>
               
               <TabsContent value="settings" className="space-y-4">
