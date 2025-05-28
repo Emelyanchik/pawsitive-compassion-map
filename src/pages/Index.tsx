@@ -25,6 +25,8 @@ import WelcomeTour from '@/components/WelcomeTour';
 import AnimalHeatmapToggle from '@/components/AnimalHeatmapToggle';
 import DirectionsPanel from '@/components/DirectionsPanel';
 import EmergencyAlertsBanner from '@/components/EmergencyAlertsBanner';
+import { MapAnalyticsWidget } from '@/components/MapAnalyticsWidget';
+import { MapInstagramWidget } from '@/components/MapInstagramWidget';
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -343,6 +345,21 @@ const Index = () => {
         {/* Main content area */}
         <div className="flex-1 relative overflow-hidden">
           {viewMode === 'map' ? <MapComponent /> : <AnimalListView />}
+          
+          {/* Analytics and Instagram widgets - only show on map view */}
+          {viewMode === 'map' && (
+            <>
+              {/* Analytics Widget */}
+              <div className="absolute top-4 right-4 z-10">
+                <MapAnalyticsWidget />
+              </div>
+              
+              {/* Instagram Widget */}
+              <div className="absolute top-4 right-[340px] z-10">
+                <MapInstagramWidget />
+              </div>
+            </>
+          )}
         </div>
         
         {/* Dark mode toggle */}
