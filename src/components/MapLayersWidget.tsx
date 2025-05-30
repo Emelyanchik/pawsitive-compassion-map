@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -189,7 +188,6 @@ export const MapLayersWidget: React.FC = () => {
                 <Switch 
                   checked={layer.visible} 
                   onCheckedChange={() => toggleLayer(layer.id)}
-                  size="sm"
                 />
               </div>
             </div>

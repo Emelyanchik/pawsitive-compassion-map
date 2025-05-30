@@ -667,15 +667,15 @@ const MapComponent: React.FC = () => {
         <MapInstagramWidget />
       </div>
       
-      {/* Notifications and Cluster Control Widgets */}
-      <div className="absolute top-4 left-4 space-y-4 z-10">
-        <MapNotificationWidget />
-        <MapClusterControlWidget />
-      </div>
-      
-      {/* Layers Widget */}
+      {/* Layers Widget - moved closer to center */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
         <MapLayersWidget />
+      </div>
+      
+      {/* Notifications and Cluster Control Widgets - moved closer to center */}
+      <div className="absolute top-4 left-1/3 space-y-4 z-10">
+        <MapNotificationWidget />
+        <MapClusterControlWidget />
       </div>
       
       {/* Quick Actions Widget */}
