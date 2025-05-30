@@ -19,6 +19,8 @@ import { MapAnalyticsWidget } from './MapAnalyticsWidget';
 import { MapInstagramWidget } from './MapInstagramWidget';
 import { MapNotificationWidget } from './MapNotificationWidget';
 import { MapQuickActionsWidget } from './MapQuickActionsWidget';
+import { MapClusterControlWidget } from './MapClusterControlWidget';
+import { MapLayersWidget } from './MapLayersWidget';
 
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -624,7 +626,7 @@ const MapComponent: React.FC = () => {
               Mapbox.com
             </a>
           </p>
-          <form onSubmit={handleMapTokenSubmit} className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); if (mapTokenInput.trim()) { setMapboxToken(mapTokenInput.trim()); localStorage.setItem('mapbox_token', mapTokenInput.trim()); } }} className="space-y-4">
             <input
               type="text"
               value={mapTokenInput}
@@ -665,9 +667,15 @@ const MapComponent: React.FC = () => {
         <MapInstagramWidget />
       </div>
       
-      {/* Notifications Widget */}
-      <div className="absolute top-4 left-4 z-10">
+      {/* Notifications and Cluster Control Widgets */}
+      <div className="absolute top-4 left-4 space-y-4 z-10">
         <MapNotificationWidget />
+        <MapClusterControlWidget />
+      </div>
+      
+      {/* Layers Widget */}
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
+        <MapLayersWidget />
       </div>
       
       {/* Quick Actions Widget */}
