@@ -15,6 +15,10 @@ import MapToolsPopup from './MapToolsPopup';
 import MapClusterLayer from './MapClusterLayer';
 import MapWeatherOverlay from './MapWeatherOverlay';
 import WeatherOverlayControl from './WeatherOverlayControl';
+import { MapAnalyticsWidget } from './MapAnalyticsWidget';
+import { MapInstagramWidget } from './MapInstagramWidget';
+import { MapNotificationWidget } from './MapNotificationWidget';
+import { MapQuickActionsWidget } from './MapQuickActionsWidget';
 
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -655,6 +659,23 @@ const MapComponent: React.FC = () => {
       {/* Add cluster layer when needed */}
       {useClusterView && <MapClusterLayer map={map.current} />}
       
+      {/* Analytics and Instagram Widgets */}
+      <div className="absolute top-4 right-4 space-y-4 z-10">
+        <MapAnalyticsWidget />
+        <MapInstagramWidget />
+      </div>
+      
+      {/* Notifications Widget */}
+      <div className="absolute top-4 left-4 z-10">
+        <MapNotificationWidget />
+      </div>
+      
+      {/* Quick Actions Widget */}
+      <div className="absolute bottom-4 right-4 z-10">
+        <MapQuickActionsWidget />
+      </div>
+      
+      {/* Existing control buttons - keeping all existing functionality */}
       <div className="absolute left-4 bottom-20 flex flex-col space-y-2">
         <Button 
           variant="secondary" 
@@ -783,6 +804,7 @@ const MapComponent: React.FC = () => {
         </div>
       )}
 
+      {/* Existing dialogs - keeping all existing functionality */}
       <Dialog open={isAddAnimalDialogOpen} onOpenChange={setIsAddAnimalDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
