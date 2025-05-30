@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Zap, 
-  SOS, 
+  AlertTriangle, 
   Users, 
   Search,
   MapPin,
@@ -17,7 +16,6 @@ import {
   Phone,
   MessageSquare,
   Heart,
-  AlertTriangle,
   ChevronRight
 } from 'lucide-react';
 
@@ -32,7 +30,7 @@ export const MapQuickActionsWidget: React.FC = () => {
       id: 'emergency',
       title: 'SOS',
       description: 'Экстренная помощь',
-      icon: SOS,
+      icon: AlertTriangle,
       color: 'bg-red-500',
       urgent: true
     },
@@ -201,7 +199,7 @@ export const MapQuickActionsWidget: React.FC = () => {
             <div className="space-y-4">
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-center gap-2 text-red-700 text-sm font-medium mb-1">
-                  <SOS className="h-4 w-4" />
+                  <AlertTriangle className="h-4 w-4" />
                   Сигнал SOS
                 </div>
                 <p className="text-xs text-red-600">
@@ -243,7 +241,7 @@ export const MapQuickActionsWidget: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <SOS className="h-4 w-4 mr-2" />
+                      <AlertTriangle className="h-4 w-4 mr-2" />
                       Отправить SOS
                     </>
                   )}
