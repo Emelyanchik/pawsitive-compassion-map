@@ -23,6 +23,8 @@ import { MapClusterControlWidget } from './MapClusterControlWidget';
 import { MapLayersWidget } from './MapLayersWidget';
 import { MapFavoritesWidget } from './MapFavoritesWidget';
 import { MapLiveStatsWidget } from './MapLiveStatsWidget';
+import { MapUserActionsWidget } from './MapUserActionsWidget';
+import { MapEventsWidget } from './MapEventsWidget';
 
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -684,6 +686,12 @@ const MapComponent: React.FC = () => {
       <div className="absolute bottom-4 left-4 space-y-4 z-10">
         <MapFavoritesWidget />
         <MapLiveStatsWidget />
+      </div>
+      
+      {/* User Actions and Events Widgets */}
+      <div className="absolute top-4 right-80 space-y-4 z-10">
+        <MapUserActionsWidget />
+        <MapEventsWidget />
       </div>
       
       {/* Quick Actions Widget */}
