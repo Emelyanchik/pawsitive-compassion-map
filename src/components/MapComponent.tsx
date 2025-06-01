@@ -21,6 +21,8 @@ import { MapNotificationWidget } from './MapNotificationWidget';
 import { MapQuickActionsWidget } from './MapQuickActionsWidget';
 import { MapClusterControlWidget } from './MapClusterControlWidget';
 import { MapLayersWidget } from './MapLayersWidget';
+import { MapFavoritesWidget } from './MapFavoritesWidget';
+import { MapLiveStatsWidget } from './MapLiveStatsWidget';
 
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -672,10 +674,16 @@ const MapComponent: React.FC = () => {
         <MapLayersWidget />
       </div>
       
-      {/* Notifications and Cluster Control Widgets - moved closer to center */}
-      <div className="absolute top-4 left-1/3 space-y-4 z-10">
+      {/* Left side widgets - closer to center */}
+      <div className="absolute top-4 left-1/4 space-y-4 z-10">
         <MapNotificationWidget />
         <MapClusterControlWidget />
+      </div>
+      
+      {/* New widgets - Favorites and Live Stats */}
+      <div className="absolute bottom-4 left-4 space-y-4 z-10">
+        <MapFavoritesWidget />
+        <MapLiveStatsWidget />
       </div>
       
       {/* Quick Actions Widget */}
