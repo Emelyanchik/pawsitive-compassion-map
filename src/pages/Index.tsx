@@ -27,6 +27,7 @@ import DirectionsPanel from '@/components/DirectionsPanel';
 import EmergencyAlertsBanner from '@/components/EmergencyAlertsBanner';
 import { MapAnalyticsWidget } from '@/components/MapAnalyticsWidget';
 import { MapInstagramWidget } from '@/components/MapInstagramWidget';
+import MapWidgetControls from '@/components/MapWidgetControls';
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -42,6 +43,21 @@ const Index = () => {
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
   const [activeHeatmap, setActiveHeatmap] = useState<string | null>(null);
   const [showDirections, setShowDirections] = useState(false);
+  
+  // Widget visibility states
+  const [widgetVisibility, setWidgetVisibility] = useState({
+    analytics: false,
+    instagram: false,
+    notifications: false,
+    quickActions: false,
+    clusterControl: false,
+    layers: false,
+    favorites: false,
+    liveStats: false,
+    userActions: false,
+    events: false
+  });
+
   const { animals, userLocation, mapRotation, mapPitch, filter, statusFilter, distanceFilter, selectedAnimal } = useMap();
   const { toast } = useToast();
 
@@ -210,6 +226,13 @@ const Index = () => {
     setShowFeedbackDialog(true);
   };
 
+  const toggleWidget = (widgetName: keyof typeof widgetVisibility) => {
+    setWidgetVisibility(prev => ({
+      ...prev,
+      [widgetName]: !prev[widgetName]
+    }));
+  };
+
   // Calculate quick stats
   const needsHelpCount = animals.filter(a => a.status === 'needs_help').length;
   const totalAnimalsCount = animals.length;
@@ -337,28 +360,21 @@ const Index = () => {
         {/* Quick stats banner */}
         <QuickStatsBanner needsHelpCount={needsHelpCount} totalCount={totalAnimalsCount} />
         
-        {/* Status filter cards */}
+        {/* Status filter cards with widget controls */}
         <div className="z-10 bg-white dark:bg-gray-800 shadow-sm">
           <StatusFilterCards />
+          <MapWidgetControls 
+            widgetVisibility={widgetVisibility}
+            onToggleWidget={toggleWidget}
+          />
         </div>
         
         {/* Main content area */}
         <div className="flex-1 relative overflow-hidden">
-          {viewMode === 'map' ? <MapComponent /> : <AnimalListView />}
-          
-          {/* Analytics and Instagram widgets - only show on map view */}
-          {viewMode === 'map' && (
-            <>
-              {/* Analytics Widget */}
-              <div className="absolute top-4 right-4 z-10">
-                <MapAnalyticsWidget />
-              </div>
-              
-              {/* Instagram Widget */}
-              <div className="absolute top-4 right-[340px] z-10">
-                <MapInstagramWidget />
-              </div>
-            </>
+          {viewMode === 'map' ? (
+            <MapComponent widgetVisibility={widgetVisibility} />
+          ) : (
+            <AnimalListView />
           )}
         </div>
         

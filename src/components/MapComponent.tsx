@@ -26,7 +26,22 @@ import { MapLiveStatsWidget } from './MapLiveStatsWidget';
 import { MapUserActionsWidget } from './MapUserActionsWidget';
 import { MapEventsWidget } from './MapEventsWidget';
 
-const MapComponent: React.FC = () => {
+interface MapComponentProps {
+  widgetVisibility: {
+    analytics: boolean;
+    instagram: boolean;
+    notifications: boolean;
+    quickActions: boolean;
+    clusterControl: boolean;
+    layers: boolean;
+    favorites: boolean;
+    liveStats: boolean;
+    userActions: boolean;
+    events: boolean;
+  };
+}
+
+const MapComponent: React.FC<MapComponentProps> = ({ widgetVisibility }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const { toast } = useToast();
@@ -665,39 +680,66 @@ const MapComponent: React.FC = () => {
       {/* Add cluster layer when needed */}
       {useClusterView && <MapClusterLayer map={map.current} />}
       
-      {/* Analytics and Instagram Widgets */}
-      <div className="absolute top-4 right-4 space-y-4 z-10">
-        <MapAnalyticsWidget />
-        <MapInstagramWidget />
-      </div>
+      {/* Conditionally rendered widgets based on visibility */}
+      {widgetVisibility.analytics && (
+        <div className="absolute top-4 right-4 z-10">
+          <MapAnalyticsWidget />
+        </div>
+      )}
       
-      {/* Layers Widget - moved closer to center */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-        <MapLayersWidget />
-      </div>
+      {widgetVisibility.instagram && (
+        <div className="absolute top-4 right-80 z-10">
+          <MapInstagramWidget />
+        </div>
+      )}
       
-      {/* Left side widgets - closer to center */}
-      <div className="absolute top-4 left-1/4 space-y-4 z-10">
-        <MapNotificationWidget />
-        <MapClusterControlWidget />
-      </div>
+      {widgetVisibility.layers && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
+          <MapLayersWidget />
+        </div>
+      )}
       
-      {/* New widgets - Favorites and Live Stats */}
-      <div className="absolute bottom-4 left-4 space-y-4 z-10">
-        <MapFavoritesWidget />
-        <MapLiveStatsWidget />
-      </div>
+      {widgetVisibility.notifications && (
+        <div className="absolute top-4 left-1/4 z-10">
+          <MapNotificationWidget />
+        </div>
+      )}
       
-      {/* User Actions and Events Widgets */}
-      <div className="absolute top-4 right-80 space-y-4 z-10">
-        <MapUserActionsWidget />
-        <MapEventsWidget />
-      </div>
+      {widgetVisibility.clusterControl && (
+        <div className="absolute top-20 left-1/4 z-10">
+          <MapClusterControlWidget />
+        </div>
+      )}
       
-      {/* Quick Actions Widget */}
-      <div className="absolute bottom-4 right-4 z-10">
-        <MapQuickActionsWidget />
-      </div>
+      {widgetVisibility.favorites && (
+        <div className="absolute bottom-4 left-4 z-10">
+          <MapFavoritesWidget />
+        </div>
+      )}
+      
+      {widgetVisibility.liveStats && (
+        <div className="absolute bottom-20 left-4 z-10">
+          <MapLiveStatsWidget />
+        </div>
+      )}
+      
+      {widgetVisibility.userActions && (
+        <div className="absolute top-4 right-[340px] z-10">
+          <MapUserActionsWidget />
+        </div>
+      )}
+      
+      {widgetVisibility.events && (
+        <div className="absolute top-[280px] right-[340px] z-10">
+          <MapEventsWidget />
+        </div>
+      )}
+      
+      {widgetVisibility.quickActions && (
+        <div className="absolute bottom-4 right-4 z-10">
+          <MapQuickActionsWidget />
+        </div>
+      )}
       
       {/* Existing control buttons - keeping all existing functionality */}
       <div className="absolute left-4 bottom-20 flex flex-col space-y-2">
